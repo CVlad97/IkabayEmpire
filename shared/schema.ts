@@ -153,3 +153,173 @@ export type GeolocationData = {
   latitude: number;
   longitude: number;
 };
+
+// ========================================
+// IKABAY CONNECT v1.2 - WhatsApp + Voice AI
+// ========================================
+
+// Partners (delivery drivers, relay operators)
+export const partners = pgTable("partners", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: text("user_id").notNull(),
+  phone: varchar("phone").notNull().unique(),
+  whatsappNumber: varchar("whatsapp_number"),
+  type: text("type").notNull(), // 'delivery_driver', 'relay_operator'
+  status: text("status").notNull().default('pending'), // 'pending', 'approved', 'suspended'
+  vehicleType: text("vehicle_type"), // 'scooter', 'car', 'bike'
+  zone: text("zone"), // 'martinique', 'guadeloupe', etc.
+  ikbBalance: real("ikb_balance").notNull().default(0),
+  totalDeliveries: integer("total_deliveries").notNull().default(0),
+  rating: real("rating").default(5.0),
+  createdAt: timestamp("created_at").defaultNow(),
+  approvedAt: timestamp("approved_at"),
+});
+
+export const insertPartnerSchema = createInsertSchema(partners).omit({
+  id: true,
+  createdAt: true,
+  approvedAt: true,
+});
+
+export type InsertPartner = z.infer<typeof insertPartnerSchema>;
+export type Partner = typeof partners.$inferSelect;
+
+// Missions (delivery tasks)
+export const missions = pgTable("missions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  customerId: text("customer_id").notNull(),
+  partnerId: text("partner_id"),
+  type: text("type").notNull(), // 'delivery', 'pickup', 'relay'
+  status: text("status").notNull().default('pending'), // 'pending', 'assigned', 'in_progress', 'completed', 'cancelled'
+  itemDescription: text("item_description").notNull(),
+  pickupLocation: text("pickup_location").notNull(),
+  deliveryLocation: text("delivery_location").notNull(),
+  pickupCoords: jsonb("pickup_coords"), // {lat, lng}
+  deliveryCoords: jsonb("delivery_coords"), // {lat, lng}
+  ikbReward: real("ikb_reward").notNull().default(10),
+  customerNotes: text("customer_notes"),
+  partnerNotes: text("partner_notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  assignedAt: timestamp("assigned_at"),
+  completedAt: timestamp("completed_at"),
+});
+
+export const insertMissionSchema = createInsertSchema(missions).omit({
+  id: true,
+  createdAt: true,
+  assignedAt: true,
+  completedAt: true,
+});
+
+export type InsertMission = z.infer<typeof insertMissionSchema>;
+export type Mission = typeof missions.$inferSelect;
+
+// Relays (pickup points, storage locations)
+export const relays = pgTable("relays", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  operatorId: text("operator_id"),
+  address: text("address").notNull(),
+  coords: jsonb("coords"), // {lat, lng}
+  zone: text("zone").notNull(),
+  phone: varchar("phone").notNull(),
+  whatsappNumber: varchar("whatsapp_number"),
+  capacity: integer("capacity").notNull().default(50), // number of packages
+  currentLoad: integer("current_load").notNull().default(0),
+  status: text("status").notNull().default('active'), // 'active', 'inactive', 'full'
+  hoursOpen: text("hours_open"), // "8h-20h"
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertRelaySchema = createInsertSchema(relays).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertRelay = z.infer<typeof insertRelaySchema>;
+export type Relay = typeof relays.$inferSelect;
+
+// WhatsApp sessions (conversation context)
+export const whatsappSessions = pgTable("whatsapp_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: text("user_id"),
+  phone: varchar("phone").notNull().unique(),
+  lastIntent: text("last_intent"), // 'nouvelle_livraison', 'valider_livraison', etc.
+  context: jsonb("context"), // conversation state
+  lastMessageAt: timestamp("last_message_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertWhatsAppSessionSchema = createInsertSchema(whatsappSessions).omit({
+  id: true,
+  createdAt: true,
+  lastMessageAt: true,
+});
+
+export type InsertWhatsAppSession = z.infer<typeof insertWhatsAppSessionSchema>;
+export type WhatsAppSession = typeof whatsappSessions.$inferSelect;
+
+// Voice logs (AI voice interaction history)
+export const voiceLogs = pgTable("voice_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: text("user_id"),
+  phone: varchar("phone").notNull(),
+  message: text("message").notNull(), // transcribed text
+  intent: text("intent"), // detected intent
+  response: text("response"), // AI response
+  audioUrl: text("audio_url"), // URL to voice response MP3
+  processingTime: integer("processing_time"), // milliseconds
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertVoiceLogSchema = createInsertSchema(voiceLogs).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertVoiceLog = z.infer<typeof insertVoiceLogSchema>;
+export type VoiceLog = typeof voiceLogs.$inferSelect;
+
+// Rewards history (IKB distribution tracking)
+export const rewardsHistory = pgTable("rewards_history", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: text("user_id").notNull(),
+  type: text("type").notNull(), // 'delivery_completed', 'relay_approved', 'fast_response'
+  ikbAmount: real("ikb_amount").notNull(),
+  relatedMissionId: text("related_mission_id"),
+  relatedPartnerId: text("related_partner_id"),
+  description: text("description").notNull(),
+  timestamp: timestamp("timestamp").notNull().default(sql`now()`),
+});
+
+export const insertRewardsHistorySchema = createInsertSchema(rewardsHistory).omit({
+  id: true,
+  timestamp: true,
+});
+
+export type InsertRewardsHistory = z.infer<typeof insertRewardsHistorySchema>;
+export type RewardsHistory = typeof rewardsHistory.$inferSelect;
+
+// AI Intent types for WhatsApp interactions
+export type AIIntent = 
+  | 'nouvelle_livraison'
+  | 'valider_livraison'
+  | 'demande_statut'
+  | 'devenir_relais'
+  | 'voir_solde'
+  | 'unknown';
+
+export type WhatsAppMessage = {
+  from: string;
+  body: string;
+  mediaUrl?: string;
+  mediaType?: string;
+};
+
+export type AIIntentResponse = {
+  intent: AIIntent;
+  response: string;
+  audioUrl?: string;
+  action?: string;
+  data?: any;
+};

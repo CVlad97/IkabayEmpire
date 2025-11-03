@@ -1,0 +1,112 @@
+##############################################
+# 🌍 IKABAY EMPIRE v2.0 – OMNIPLATFORM AI MVP
+# Auteur : Vladimir CLAVEAU
+# Objectif : MVP caribéen universel et intelligent
+# Compatibilité : Web + Mobile + WhatsApp + Social + API
+##############################################
+
+🎯 Objectif :
+Créer une plateforme unifiée “Ikabay Empire” qui :
+- Fonctionne sur tout support (web, mobile, WhatsApp, Facebook, Telegram)
+- Centralise e-commerce, food delivery, crypto rewards et IA
+- S’auto-optimise selon les clics, zones et intérêts utilisateurs
+- Offre une expérience fluide, tropicale, et communautaire
+
+##############################################
+## ⚙️ ARCHITECTURE TECHNIQUE
+##############################################
+
+Framework : Next.js 14 + TypeScript  
+UI : TailwindCSS + Shadcn UI + Framer Motion  
+DB : Supabase (users, products, orders, wallets, analytics)  
+IA : OpenAI GPT-4o-mini + Google Gemini Pro  
+Géolocalisation : ipapi.co + GPS mobile  
+Crypto : IKB Token (wallet fictif + cashback + mining)  
+Social/Chat : WhatsApp Cloud API + Telegram Bot API  
+Webhooks : Zapier + Airtable + Replit Cron  
+Monitoring : IKABOT Empire AI Supervisor  
+SEO : Automatique (sitemap, microdata, hreflang)
+
+##############################################
+## 🔐 SECRETS À UTILISER / CRÉER
+##############################################
+NEXT_PUBLIC_SUPABASE_URL  
+NEXT_PUBLIC_SUPABASE_ANON_KEY  
+OPENAI_API_KEY  
+GEMINI_API_KEY  
+COINBASE_API_KEY  
+WHATSAPP_API_TOKEN  
+TELEGRAM_BOT_TOKEN  
+ZAPIER_HOOK_URL  
+AIRTABLE_API_KEY  
+EMPIRE_API_TOKEN  
+INTERNAL_SERVICE_TOKEN  
+IKB_CONTRACT_ADDRESS  
+
+##############################################
+## 🧱 STRUCTURE À GÉNÉRER
+##############################################
+
+📁 /app
+- /[locale]/page.tsx → page d’accueil IA tropicale
+- /market → marketplace de produits
+- /food → livraison locale (Delikreol)
+- /dashboard → portefeuille crypto + IA
+- /chat → intégration WhatsApp / Telegram
+- /api → endpoints IA, crypto, géoloc, WhatsApp
+
+📁 /lib
+- supabaseClient.ts → gestion DB
+- queryClient.ts → React Query
+- ai.ts → fusion OpenAI + Gemini
+- whatsapp.ts → Webhook message API
+- empireSupervisor.ts → analyse globale + recommandations
+
+📁 /scripts
+- monitor-empire.sh → scan auto toutes les 12h
+- notify-whatsapp.sh → envoi notifications auto
+
+📁 /components
+- Hero.tsx (texte IA + CTA)
+- ProductCard.tsx
+- WalletCard.tsx
+- ChatWidget.tsx (WhatsApp/Telegram)
+- DashboardCharts.tsx (Recharts)
+
+##############################################
+## 🤖 INTELLIGENCE & AUTOMATION
+##############################################
+
+1️⃣ /api/story
+→ Génère la phrase d’accueil du jour (OpenAI)
+“Bienvenue à Fort-de-France 🌴 — chaque clic te rapporte un peu d’IKB.”
+
+2️⃣ /api/recommend
+→ Fusion OpenAI + Gemini : top 3 produits selon clics, géoloc et tendances locales
+
+3️⃣ /api/reward
+→ Crédit automatique 5% IKB après achat + message WhatsApp : “Félicitations 🎉 ! Tu gagnes 5% IKB.”
+
+4️⃣ /api/geo
+→ Détection géographique (ipapi.co + GPS mobile fallback)
+
+5️⃣ /api/whatsapp
+→ Envoi de messages via Cloud API (Twilio ou Meta)
+Ex : “Salut 👋 ! Voici les nouveautés d’Ikabay aujourd’hui 🌺”
++ possibilité de répondre avec “Acheter” ou “Découvrir”
+
+6️⃣ /api/empire
+→ Superviseur global IA : scan ventes, engagement, IKB circulation, zone active.
+→ Stocke dans Supabase `empire_logs`.
+
+##############################################
+## 📱 WHATSAPP / TELEGRAM FLOW
+##############################################
+
+🎯 Cas d’usage :
+- L’utilisateur clique sur “Partager sur WhatsApp” → reçoit un lien unique
+- Il peut taper “MENU”, “OFFRE”, “SOLDE” ou “AIDE”
+- IKABOT répond avec IA (OpenAI) selon contexte
+- Les interactions sont loggées pour scoring
+
+📞 Exemple de flux IA :

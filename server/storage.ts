@@ -27,6 +27,7 @@ export interface IStorage {
   
   // Wallet
   getWallet(userId: string): Promise<Wallet | undefined>;
+  getAllWallets(): Promise<Wallet[]>;
   createWallet(wallet: InsertWallet): Promise<Wallet>;
   updateWallet(userId: string, updates: Partial<Wallet>): Promise<Wallet>;
   
@@ -96,6 +97,10 @@ export class DatabaseStorage implements IStorage {
   async getWallet(userId: string): Promise<Wallet | undefined> {
     const result = await db.select().from(wallets).where(eq(wallets.userId, userId));
     return result[0];
+  }
+
+  async getAllWallets(): Promise<Wallet[]> {
+    return await db.select().from(wallets);
   }
 
   async createWallet(insertWallet: InsertWallet): Promise<Wallet> {

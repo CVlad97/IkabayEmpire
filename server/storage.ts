@@ -8,7 +8,7 @@ import {
   products, foodItems, wallets, transactions, userActivity, users
 } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (for Replit Auth)
@@ -123,11 +123,15 @@ export class DatabaseStorage implements IStorage {
 
   // Transactions
   async getTransactions(userId: string): Promise<Transaction[]> {
-    return await db.select().from(transactions).where(eq(transactions.userId, userId));
+    return await db
+      .select()
+      .from(transactions)
+      .where(eq(transactions.userId, userId))
+      .orderBy(desc(transactions.timestamp));
   }
 
   async getAllTransactions(): Promise<Transaction[]> {
-    return await db.select().from(transactions);
+    return await db.select().from(transactions).orderBy(desc(transactions.timestamp));
   }
 
   async createTransaction(insertTransaction: InsertTransaction): Promise<Transaction> {

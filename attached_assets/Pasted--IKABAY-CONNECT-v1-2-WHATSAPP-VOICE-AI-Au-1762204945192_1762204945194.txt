@@ -1,0 +1,96 @@
+##############################################
+# 🌴 IKABAY CONNECT v1.2 — WHATSAPP + VOICE AI
+# Auteur : Vladimir CLAVEAU
+# Objectif : connecter l'écosystème Ikabay (livreurs, relais, clients)
+# via WhatsApp et commande vocale IA
+##############################################
+
+🎯 Objectif :
+Créer un assistant intelligent et vocal connecté à WhatsApp
+pour gérer :
+- Les missions logistiques (livraison, relais, stockage)
+- Les commandes clients
+- Les paiements et récompenses IKB
+- Les interactions IA vocales
+
+##############################################
+## 🔧 STACK ET INTÉGRATIONS
+##############################################
+- Express + Vite/React (base)
+- Supabase (tables partners, missions, relays, ikb_balance)
+- Twilio WhatsApp API
+- OpenAI Whisper (reconnaissance vocale)
+- Gemini API (compréhension et recommandations)
+- OpenAI TTS (réponse vocale)
+- WebSocket (notifications en temps réel)
+
+##############################################
+## 🧩 NOUVELLES ROUTES API
+##############################################
+
+📞 /api/whatsapp/webhook
+- Reçoit les messages WhatsApp entrants (texte, audio)
+- Transcrit audio via Whisper
+- Envoie la requête à /api/ai/intent
+
+🧠 /api/ai/intent
+- Analyse IA du message (commande, statut, question)
+- Actions possibles :
+  - "nouvelle_livraison"
+  - "valider_livraison"
+  - "demande_statut"
+  - "devenir_relais"
+  - "voir_solde"
+- Retourne texte + message vocal (MP3)
+
+🎧 /api/voice/reply
+- Génère réponse vocale (TTS)
+- Envoie fichier audio vers WhatsApp via Twilio
+
+💰 /api/rewards/auto
+- Ajoute 10 IKB à un livreur ou relais validé
+- Notifie par WhatsApp : “🎉 Vous venez de gagner 10 IKB !”
+
+##############################################
+## 🧾 NOUVELLES TABLES SUPABASE
+##############################################
+- whatsapp_sessions (id, user_id, phone, last_intent, context)
+- voice_logs (id, user_id, message, intent, created_at)
+- rewards_history (id, user_id, type, ikb_amount, timestamp)
+
+##############################################
+## 🧠 IA COMPORTEMENTALE
+##############################################
+- Whisper : transcrire audio en texte
+- Gemini : déterminer l’intention (commande, demande, livraison)
+- GPT-4o-mini : générer la réponse texte adaptée
+- OpenAI TTS : synthèse vocale personnalisée
+- IKABOT : suivre missions et ajuster récompenses
+
+##############################################
+## 💬 FLUX WHATSAPP
+##############################################
+1️⃣ Utilisateur envoie message vocal “Ikabay, j’ai livré la commande 325”
+2️⃣ /api/whatsapp/webhook → Whisper → texte
+3️⃣ /api/ai/intent → détection "valider_livraison"
+4️⃣ Supabase update mission status → completed
+5️⃣ /api/rewards/auto → +10 IKB
+6️⃣ /api/voice/reply → “Merci ! Vous avez gagné 10 IKB.”
+7️⃣ Envoi audio via Twilio vers WhatsApp
+
+##############################################
+## 🪙 BONUS IKB AUTOMATIQUE
+##############################################
+- Livraison validée = +10 IKB
+- Nouveau relais approuvé = +25 IKB
+- Réponse IA vocale rapide (<5s) = +2 IKB
+
+##############################################
+## 🎨 UI (CÔTÉ CLIENT)
+##############################################
+- Section “Ikabay Connect” avec QR WhatsApp
+- État des missions vocales
+- Historique des interactions IA
+- Solde IKB + rewards vocales
+
+echo "✅ IKABAY CONNECT v1.2 — WhatsApp + IA vocale prêt à être déployé 🎙️"

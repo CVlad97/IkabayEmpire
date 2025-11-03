@@ -3,12 +3,16 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { openai } from "./lib/openai-client";
 import { ai } from "./lib/gemini-client";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 
 // Cache for daily story
 let dailyStoryCache: { text: string; generatedAt: string } | null = null;
 let lastStoryDate: string | null = null;
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup Replit Auth (login, logout, callback routes)
+  await setupAuth(app);
+
   const DEFAULT_USER_ID = "default";
 
   // AI Story - Daily Caribbean message from OpenAI
@@ -77,6 +81,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Auth user endpoint - Get authenticated user data
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
   // Products - Get all products
   app.get("/api/products", async (req, res) => {
     try {
@@ -97,13 +113,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Wallet - Get wallet balance
-  app.get("/api/wallet", async (req, res) => {
+  // Wallet - Get wallet balance (protected route)
+  app.get("/api/wallet", isAuthenticated, async (req: any, res) => {
     try {
-      let wallet = await storage.getWallet(DEFAULT_USER_ID);
+      const userId = req.user.claims.sub;
+      let wallet = await storage.getWallet(userId);
       if (!wallet) {
         wallet = await storage.createWallet({
-          userId: DEFAULT_USER_ID,
+          userId,
           balance: 0,
           totalEarned: 0,
           miningActive: false,
@@ -115,13 +132,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Wallet - Toggle mining
-  app.post("/api/wallet/toggle-mining", async (req, res) => {
+  // Wallet - Toggle mining (protected route)
+  app.post("/api/wallet/toggle-mining", isAuthenticated, async (req: any, res) => {
     try {
-      let wallet = await storage.getWallet(DEFAULT_USER_ID);
+      const userId = req.user.claims.sub;
+      let wallet = await storage.getWallet(userId);
       if (!wallet) {
         wallet = await storage.createWallet({
-          userId: DEFAULT_USER_ID,
+          userId,
           balance: 0,
           totalEarned: 0,
           miningActive: false,
@@ -133,7 +151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // If turning on mining, add initial mining reward
       if (newMiningState) {
         const miningReward = 0.05;
-        const updated = await storage.updateWallet(DEFAULT_USER_ID, {
+        const updated = await storage.updateWallet(userId, {
           balance: wallet.balance + miningReward,
           totalEarned: wallet.totalEarned + miningReward,
           miningActive: true,
@@ -142,7 +160,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Create transaction
         await storage.createTransaction({
-          userId: DEFAULT_USER_ID,
+          userId,
           type: "mining",
           amount: miningReward,
           description: "Récompense de mining IKB",
@@ -150,7 +168,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         res.json(updated);
       } else {
-        const updated = await storage.updateWallet(DEFAULT_USER_ID, {
+        const updated = await storage.updateWallet(userId, {
           miningActive: false,
         });
         res.json(updated);
@@ -161,19 +179,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Transactions - Get transaction history
-  app.get("/api/transactions", async (req, res) => {
+  // Transactions - Get transaction history (protected route)
+  app.get("/api/transactions", isAuthenticated, async (req: any, res) => {
     try {
-      const transactions = await storage.getTransactions(DEFAULT_USER_ID);
+      const userId = req.user.claims.sub;
+      const transactions = await storage.getTransactions(userId);
       res.json(transactions);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch transactions" });
     }
   });
 
-  // Purchase - Buy a product with cashback
-  app.post("/api/purchase", async (req, res) => {
+  // Purchase - Buy a product with cashback (protected route)
+  app.post("/api/purchase", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
       const { productId } = req.body;
       
       const product = await storage.getProduct(productId);
@@ -185,10 +205,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Product out of stock" });
       }
 
-      let wallet = await storage.getWallet(DEFAULT_USER_ID);
+      let wallet = await storage.getWallet(userId);
       if (!wallet) {
         wallet = await storage.createWallet({
-          userId: DEFAULT_USER_ID,
+          userId,
           balance: 0,
           totalEarned: 0,
           miningActive: false,
@@ -199,14 +219,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const cashback = product.price * 0.05;
 
       // Update wallet with cashback
-      const updated = await storage.updateWallet(DEFAULT_USER_ID, {
+      const updated = await storage.updateWallet(userId, {
         balance: wallet.balance + cashback,
         totalEarned: wallet.totalEarned + cashback,
       });
 
       // Create purchase transaction
       await storage.createTransaction({
-        userId: DEFAULT_USER_ID,
+        userId,
         type: "purchase",
         amount: -product.price,
         description: `Achat: ${product.name}`,
@@ -214,7 +234,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create cashback transaction
       await storage.createTransaction({
-        userId: DEFAULT_USER_ID,
+        userId,
         type: "cashback",
         amount: cashback,
         description: `Cashback 5%: ${product.name}`,
@@ -222,7 +242,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Track user activity
       await storage.createUserActivity({
-        userId: DEFAULT_USER_ID,
+        userId,
         action: "purchase",
         itemId: productId,
         itemType: "product",
@@ -236,15 +256,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Share - Reward for sharing
-  app.post("/api/share", async (req, res) => {
+  // Share - Reward for sharing (protected route)
+  app.post("/api/share", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
       const { productId } = req.body;
 
-      let wallet = await storage.getWallet(DEFAULT_USER_ID);
+      let wallet = await storage.getWallet(userId);
       if (!wallet) {
         wallet = await storage.createWallet({
-          userId: DEFAULT_USER_ID,
+          userId,
           balance: 0,
           totalEarned: 0,
           miningActive: false,
@@ -254,14 +275,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const shareReward = 10;
 
       // Update wallet
-      const updated = await storage.updateWallet(DEFAULT_USER_ID, {
+      const updated = await storage.updateWallet(userId, {
         balance: wallet.balance + shareReward,
         totalEarned: wallet.totalEarned + shareReward,
       });
 
       // Create transaction
       await storage.createTransaction({
-        userId: DEFAULT_USER_ID,
+        userId,
         type: "share_reward",
         amount: shareReward,
         description: "Récompense de partage",
@@ -274,11 +295,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // AI Recommendations - Get personalized product recommendations using Gemini
-  app.get("/api/recommend", async (req, res) => {
+  // AI Recommendations - Get personalized product recommendations using Gemini (protected route)
+  app.get("/api/recommend", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
       const products = await storage.getProducts();
-      const activities = await storage.getUserActivity(DEFAULT_USER_ID);
+      const activities = await storage.getUserActivity(userId);
 
       if (products.length === 0) {
         return res.json([]);
@@ -343,17 +365,19 @@ Réponds avec seulement 3 numéros de produits séparés par des virgules (ex: 1
     }
   });
 
-  // Admin Analytics - Get comprehensive analytics with AI insights
-  app.get("/api/admin/analytics", async (req, res) => {
+  // Admin Analytics - Get comprehensive analytics with AI insights (protected route)
+  app.get("/api/admin/analytics", isAuthenticated, async (req: any, res) => {
     try {
       const transactions = await storage.getAllTransactions();
       const products = await storage.getProducts();
-      const wallet = await storage.getWallet(DEFAULT_USER_ID);
+      const wallets = await storage.getAllWallets();
 
-      // Calculate metrics
+      // Calculate metrics across all users
       const purchaseTransactions = transactions.filter(t => t.type === "purchase");
       const totalSales = purchaseTransactions.reduce((sum, t) => sum + Math.abs(t.amount), 0);
-      const totalIKBDistributed = wallet?.totalEarned || 0;
+      const totalIKBDistributed = wallets.reduce((sum, w) => sum + w.totalEarned, 0);
+      const totalUsers = wallets.length;
+      const activeUsers = wallets.filter(w => w.miningActive).length;
 
       // Sales by region (mock data for demo)
       const salesByRegion = [
@@ -390,9 +414,9 @@ Focus sur les opportunités de croissance et recommandations stratégiques.`
 
       res.json({
         totalSales,
-        totalUsers: 1,
+        totalUsers,
         totalIKBDistributed,
-        activeUsers: wallet?.miningActive ? 1 : 0,
+        activeUsers,
         salesByRegion,
         aiInsights,
       });

@@ -1,0 +1,148 @@
+##############################################
+# 🌴 IKABAY EMPIRE v1.0 – FULL AUTONOMOUS MVP
+# Auteur : Vladimir CLAVEAU
+# Objectif : Un MVP caribéen complet, viral, interconnecté et intelligent
+##############################################
+
+🎯 Objectif :
+Construire un site/app autonome qui fusionne le meilleur d’Ikabay Cariplace, Delikreol, IKBOT & CryptoFarm.
+Un écosystème unique où :
+> l’utilisateur découvre, achète, gagne, apprend et partage — sans friction.
+
+##############################################
+## ⚙️ INFRASTRUCTURE TECH
+##############################################
+
+Framework : Next.js 14 (App Router, TypeScript)
+UI : TailwindCSS + Framer Motion + shadcn/ui
+DB : Supabase (PostgreSQL + auth + realtime)
+IA : OpenAI GPT-4o Mini + Google Gemini Pro
+Crypto : Coinbase Commerce + IKB token (fictif cashback)
+Automatisation : Zapier + Airtable + Replit Cron
+Sécurité : JWT + Rate limit + Bearer token
+Monitoring : IKABOT Empire Supervisor (AI engine)
+Géolocalisation : ipapi.co + fallback user GPS
+
+##############################################
+## 🔐 SECRETS À UTILISER (déjà présents)
+##############################################
+NEXT_PUBLIC_SUPABASE_URL  
+NEXT_PUBLIC_SUPABASE_ANON_KEY  
+OPENAI_API_KEY  
+GEMINI_API_KEY  
+COINBASE_API_KEY  
+ZAPIER_HOOK_URL  
+AIRTABLE_API_KEY  
+INTERNAL_SERVICE_TOKEN  
+EMPIRE_API_TOKEN  
+REWARD_SECRET  
+IKB_CONTRACT_ADDRESS  
+
+##############################################
+## 🏗️ MODULES À GÉNÉRER
+##############################################
+
+1️⃣ **Home – Hero IA + carrousel + géoloc**
+   - Texte d’accueil généré par IA
+   - Carrousel images (produits / plats / crypto)
+   - Géolocalisation → affiche “Tu es à Fort-de-France 🇲🇶”
+
+2️⃣ **Market – Produits & cashback**
+   - 6 produits Supabase
+   - Achat fictif → rewards IKB (+5 %)
+   - IA recommendations selon géoloc & clics
+   - Bouton “Partager et gagne 10 IKB” (Zapier)
+
+3️⃣ **Delikreol – Livraison locale**
+   - API carte (Leaflet)
+   - Menus plats locaux + livraison IA
+   - Temps estimé selon zone géo
+
+4️⃣ **Crypto Dashboard – Wallet + mining + rewards**
+   - Solde IKB + équivalent €
+   - Mining fictif (+0.05 IKB / 2 s)
+   - Stats + Historique transactions
+   - Graphiques Recharts
+
+5️⃣ **IA Orchestrator – IKABOT**
+   - /api/ikabot : analyse clics, ventes, géoloc
+   - /api/recommend : GPT + Gemini combine pour suggérer 3 produits
+   - /api/story : texte caribéen du jour
+   - /api/reward : cashback auto + bonus loyauté
+   - /api/empire : scanne le système (ventes, tokens, engagement)
+   - Cron : 2 analyses/jour + log dans empire_logs
+
+6️⃣ **Dashboard Admin**
+   - Graph ventes par région + activité utilisateurs
+   - IA conseil business (auto-generated report)
+   - Gestion produits / rewards / IA logs
+
+7️⃣ **UI/UX**
+   - Palette : ikabay-orange #FF914D, ikabay-green #2ECC71, ikabay-dark #1E1E1E
+   - Boutons arrondis, effets rebond, ombres douces
+   - Framer Motion animations
+   - Mobile-first + SEO auto (sitemap + schema.org)
+
+##############################################
+## 🧠 IA WORKFLOW
+##############################################
+
+1️⃣ `story.ts` → GPT-4o Mini génère phrase caribéenne du jour  
+2️⃣ `recommend.ts` → Gemini analyse clics, ventes + géoloc → 3 produits clés  
+3️⃣ `reward.ts` → ajoute 5 % IKB aux balances utilisateurs  
+4️⃣ `empire.ts` → scanne tout l’écosystème → rapports dans Supabase  
+5️⃣ `ikabot.ts` → gère les actions automatiques (optimisation hebdo)
+
+##############################################
+## 🧰 COMMANDES À EXÉCUTER
+##############################################
+
+rm -rf app lib  
+npx create-next-app@latest . --typescript --tailwind --eslint --app  
+npm install @supabase/supabase-js @tanstack/react-query framer-motion openai @google/generative-ai recharts swr leaflet shadcn-ui  
+
+# Fichiers core
+mkdir -p lib app/api app/[locale] app/components app/dashboard scripts styles logs
+
+cat > lib/queryClient.ts << 'EOF'
+import { QueryClient } from "@tanstack/react-query";
+export const queryClient = new QueryClient();
+EOF
+
+cat > lib/supabaseClient.ts << 'EOF'
+import { createClient } from "@supabase/supabase-js";
+export const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+EOF
+
+# Initialisation Tailwind
+npx tailwindcss init -p
+cat > tailwind.config.js << 'EOF'
+module.exports = {
+  theme: {
+    extend: {
+      colors: {
+        "ikabay-orange": "#FF914D",
+        "ikabay-green": "#2ECC71",
+        "ikabay-dark": "#1E1E1E"
+      }
+    }
+  },
+  plugins: []
+};
+EOF
+
+##############################################
+## 🚀 À LA FIN DU BUILD
+##############################################
+
+✅ Page d’accueil interactive IA  
+✅ Produits Supabase avec cashback + recommandations  
+✅ Dashboard crypto IKB + mining + graphiques  
+✅ Empire AI Supervisor (analyses auto)  
+✅ Design caribéen professionnel  
+✅ Tout prêt pour déploiement Replit ou Vercel  
+
+echo "🌴 IKABAY EMPIRE v1.0 créé avec succès. Lance 'npm run dev' et ouvre / pour tester."

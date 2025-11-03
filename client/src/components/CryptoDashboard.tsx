@@ -129,7 +129,7 @@ export default function CryptoDashboard() {
             <CardContent>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium mb-1">
+                  <div className="text-sm font-medium mb-1">
                     {wallet?.miningActive ? (
                       <Badge className="bg-ikabay-green text-white" data-testid="badge-mining-status">
                         Actif
@@ -139,7 +139,7 @@ export default function CryptoDashboard() {
                         Inactif
                       </Badge>
                     )}
-                  </p>
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     +0.05 IKB toutes les 2s
                   </p>

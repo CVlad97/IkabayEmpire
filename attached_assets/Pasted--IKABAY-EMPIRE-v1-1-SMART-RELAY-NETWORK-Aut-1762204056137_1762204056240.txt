@@ -1,0 +1,98 @@
+##############################################
+# 🌴 IKABAY EMPIRE v1.1 — SMART RELAY NETWORK
+# Auteur : Vladimir CLAVEAU
+# Objectif : Ajouter la logistique mutualisée et les partenariats communautaires
+##############################################
+
+🎯 Objectif :
+Étendre Ikabay Empire pour permettre à tout utilisateur de :
+- Devenir livreur ou point relais
+- Gérer des colis, livraisons, zones, et stocks
+- Gagner des récompenses IKB pour chaque mission réussie
+- Voir et rejoindre les relais proches via géolocalisation
+- Offrir aux entreprises locales un accès au réseau logistique
+
+##############################################
+## 🔧 STACK TECH EXISTANT
+##############################################
+Next.js / Express + PostgreSQL / Supabase
+Leaflet.js (cartes)
+OpenAI GPT-4o-mini + Gemini
+Replit Auth + Stripe + IKB Tokens
+AI Supervisor (IKABOT)
+
+##############################################
+## 🧩 MODULES À AJOUTER
+##############################################
+
+📦 1️⃣ PAGE /partenaires
+- Formulaire : Nom, rôle (livreur, relais, stockage), coordonnées, zone de couverture
+- IA guidance (OpenAI) pour recommander la meilleure position
+- Validation admin
+- Inscription stockée dans Supabase (table partners)
+
+📍 2️⃣ PAGE /relais
+- Carte Leaflet avec points relais + filtres (type, distance, dispo)
+- Intégration géoloc utilisateur
+- Popups interactifs : adresse, services, statut, contact WhatsApp
+
+🛵 3️⃣ PAGE /missions
+- Liste des missions disponibles : livraison, stockage, transfert
+- Bouton “Accepter la mission” → update status = "in_progress"
+- Rewards IKB automatiques à la complétion
+
+💰 4️⃣ PAGE /rewards
+- Récompenses pour partenaires : % ventes, IKB, badges
+- Intégration au dashboard existant
+
+🧠 5️⃣ API /api/logistique
+- Endpoints :
+  - /createRelay
+  - /assignDelivery
+  - /validateDelivery
+- Connectés à Supabase
+- Calcul IA des trajets optimaux (distance, densité, délais)
+
+📊 6️⃣ DASHBOARD ADMIN
+- Section “Logistique & Partenaires”
+- Vue carte (relais actifs, livreurs en ligne)
+- Statistiques : colis livrés, zones inactives, délais moyens
+- Intégration au module AI Supervisor
+
+💬 7️⃣ WHATSAPP LIVREUR BOT
+- Endpoint /api/whatsapp/logistique
+- Notifications : “Nouvelle mission disponible”, “Livraison terminée”, “Bonus reçu”
+- Commandes textuelles (“Voir mes missions”, “Ma zone”)
+
+##############################################
+## 🧠 INTÉGRATION IA
+##############################################
+- GPT + Gemini : suggérer les meilleures zones relais selon la demande
+- IKABOT : analyser et prédire les besoins logistiques
+- IA scoring : relier satisfaction clients ↔ rapidité relais
+
+##############################################
+## 🧾 BASE DE DONNÉES
+##############################################
+Tables à créer dans Supabase :
+- partners (id, name, role, zone, status, wallet_ikb)
+- missions (id, partner_id, type, reward_ikb, status, timestamps)
+- relays (id, name, lat, lng, capacity, available)
+- logistics_logs (id, type, message, created_at)
+
+##############################################
+## 🪙 RÉCOMPENSES AUTOMATIQUES
+##############################################
+- 10 IKB pour chaque livraison réussie
+- 50 IKB/mois pour relais actifs
+- Bonus de 5% sur ventes dans la zone couverte
+
+##############################################
+## 🎨 DESIGN
+##############################################
+- Carte interactive tropicale
+- Couleurs Ikabay : orange #FF914D, vert #2ECC71, bleu #0AA1DD
+- Animation Framer Motion sur les pins Leaflet
+- Mobile-first (priorité livreurs)
+
+echo "✅ IKABAY EMPIRE v1.1 — Smart Relay Network prêt à être déployé 🌍"

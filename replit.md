@@ -6,6 +6,19 @@ IKABAY EMPIRE is a comprehensive Caribbean-focused e-commerce and rewards ecosys
 
 ## Recent Changes (November 4, 2025)
 
+### ✅ v2.4 DROPSHIPPING AUTOMATION - Complete (CJ API + AutoDS/Zendrop Stubs)
+- **CJ Dropshipping API Integration**: Full product import automation with token-based authentication
+- **Multi-Supplier Architecture**: CJ (active), AutoDS (stub - requires approval), Zendrop (stub - no public API)
+- **Product Search**: Keyword/category search with pagination, real-time results
+- **1-Click Import**: Product cards with thumbnail, price, SKU → instant catalog addition
+- **Stock Sync**: Individual and bulk synchronization for price/inventory updates
+- **Transparent Pricing Fields**: supplierPrice, shippingCost, importFees, relayFees (DOM-TOM)
+- **Comprehensive Logging**: Complete audit trail for all import/sync operations with success/failure tracking
+- **Admin Interface**: /dropshipping page with 3 tabs (Search/Import, Suppliers, Logs)
+- **Security**: API key configuration (email + key for CJ), validation on activation
+- **Auto-Initialization**: Service initializes on server startup + lazy loading on first request
+- **E2E Tested**: Supplier initialization, UI navigation, tab switching validated
+
 ### ✅ v2.4 PARTNER REGISTRATION - Complete
 - **3-Step Wizard**: Info → Location → Validation with progress indicator
 - **Multi-Type Support**: Delivery drivers, relay operators, food partners, storage facilities

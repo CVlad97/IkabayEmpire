@@ -39,10 +39,22 @@ export const products = pgTable("products", {
   image: text("image").notNull(),
   category: text("category").notNull(),
   inStock: boolean("in_stock").notNull().default(true),
+  // Dropshipping fields
+  source: text("source").notNull().default("local"), // 'local', 'cj', 'autods', 'zendrop'
+  externalId: text("external_id"), // Supplier's product ID
+  sku: text("sku"), // Stock keeping unit
+  supplierPrice: real("supplier_price"), // Cost from supplier
+  shippingCost: real("shipping_cost"), // Shipping cost estimate
+  processingTime: integer("processing_time"), // Days to process order
+  stockQuantity: integer("stock_quantity"), // Available quantity
+  lastSyncedAt: timestamp("last_synced_at"), // Last sync with supplier API
+  importFees: real("import_fees"), // DOM-TOM import taxes
+  relayFees: real("relay_fees"), // Relay point handling fees
 });
 
 export const insertProductSchema = createInsertSchema(products).omit({
   id: true,
+  lastSyncedAt: true,
 });
 
 export type InsertProduct = z.infer<typeof insertProductSchema>;
@@ -504,6 +516,56 @@ export const insertZoneSuggestionSchema = createInsertSchema(zoneSuggestions).om
 
 export type InsertZoneSuggestion = z.infer<typeof insertZoneSuggestionSchema>;
 export type ZoneSuggestion = typeof zoneSuggestions.$inferSelect;
+
+// Dropshipping suppliers configuration
+export const dropshippingSuppliers = pgTable("dropshipping_suppliers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(), // 'CJ Dropshipping', 'AutoDS', 'Zendrop'
+  code: text("code").notNull().unique(), // 'cj', 'autods', 'zendrop'
+  active: boolean("active").notNull().default(true),
+  apiKey: text("api_key"), // Encrypted API key
+  apiEmail: text("api_email"), // For CJ authentication
+  accessToken: text("access_token"), // Current access token
+  refreshToken: text("refresh_token"), // Refresh token
+  tokenExpiresAt: timestamp("token_expires_at"), // Token expiry
+  baseUrl: text("base_url").notNull(), // API base URL
+  lastSyncAt: timestamp("last_sync_at"), // Last successful sync
+  syncStatus: text("sync_status").default('idle'), // 'idle', 'syncing', 'error'
+  errorMessage: text("error_message"), // Last error if any
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertDropshippingSupplierSchema = createInsertSchema(dropshippingSuppliers).omit({
+  id: true,
+  createdAt: true,
+  lastSyncAt: true,
+});
+
+export type InsertDropshippingSupplier = z.infer<typeof insertDropshippingSupplierSchema>;
+export type DropshippingSupplier = typeof dropshippingSuppliers.$inferSelect;
+
+// Product sync logs
+export const productSyncLogs = pgTable("product_sync_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  supplierId: varchar("supplier_id").notNull(),
+  action: text("action").notNull(), // 'import', 'update', 'delete', 'sync'
+  productId: varchar("product_id"), // Our product ID
+  externalId: text("external_id"), // Supplier's product ID
+  status: text("status").notNull(), // 'success', 'failed', 'pending'
+  itemsProcessed: integer("items_processed").default(0),
+  itemsFailed: integer("items_failed").default(0),
+  errorMessage: text("error_message"),
+  metadata: jsonb("metadata"), // Additional sync data
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertProductSyncLogSchema = createInsertSchema(productSyncLogs).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertProductSyncLog = z.infer<typeof insertProductSyncLogSchema>;
+export type ProductSyncLog = typeof productSyncLogs.$inferSelect;
 
 // Route data for optimized delivery paths
 export type RouteData = {

@@ -501,28 +501,58 @@ Focus sur les opportunités de croissance et recommandations stratégiques.`
         });
       }
 
-      // For now, send a simple acknowledgment
-      // TODO: Implement AI intent recognition (Task 4) and voice processing (Task 3)
       const { sendWhatsAppMessage } = await import('./twilio');
       
+      let finalMessage = messageText;
+      let processingTime = 0;
+      
+      // If audio message, transcribe it using Whisper
+      if (isAudio && MediaUrl0) {
+        try {
+          const transcribeStart = Date.now();
+          
+          // Download audio with Twilio authentication
+          const { fetchTwilioMedia } = await import('./twilio');
+          const audioBuffer = await fetchTwilioMedia(MediaUrl0);
+          const audioFile = new File([audioBuffer], "audio.ogg", { type: mediaType });
+
+          // Transcribe using OpenAI Whisper
+          const transcription = await openai.audio.transcriptions.create({
+            file: audioFile,
+            model: "whisper-1",
+            language: "fr",
+          });
+
+          finalMessage = transcription.text;
+          processingTime = Date.now() - transcribeStart;
+          
+          console.log(`Transcribed audio from ${phone} (${processingTime}ms): ${finalMessage}`);
+        } catch (error) {
+          console.error("Error transcribing audio:", error);
+          finalMessage = '[Audio transcription failed]';
+        }
+      }
+      
+      // For now, send a simple acknowledgment
+      // TODO: Implement AI intent recognition (Task 4) to generate intelligent responses
       let responseMessage = '';
       if (isAudio) {
-        responseMessage = "Bienvenue sur IKABAY CONNECT!\n\nVotre message vocal a ete recu. Notre systeme IA va analyser votre demande.\n\nFonctionnalites disponibles:\n- Nouvelle livraison\n- Valider livraison\n- Demander statut\n- Devenir relais\n- Voir solde IKB";
+        responseMessage = `Bienvenue sur IKABAY CONNECT!\n\nVotre message vocal a ete recu${finalMessage !== '[Audio transcription failed]' ? ' et transcrit' : ''}. Notre systeme IA va analyser votre demande.\n\nFonctionnalites disponibles:\n- Nouvelle livraison\n- Valider livraison\n- Demander statut\n- Devenir relais\n- Voir solde IKB`;
       } else {
         responseMessage = "Bienvenue sur IKABAY CONNECT!\n\nVotre message a ete recu. Notre systeme IA va analyser votre demande.\n\nFonctionnalites disponibles:\n- Nouvelle livraison\n- Valider livraison\n- Demander statut\n- Devenir relais\n- Voir solde IKB";
       }
       
       await sendWhatsAppMessage(phone, responseMessage);
 
-      // Log the interaction
+      // Log the interaction with transcription
       await storage.createVoiceLog({
         userId: session.userId,
         phone,
-        message: messageText || '[Audio message]',
+        message: finalMessage || messageText || '[Audio message]',
         intent: 'unknown',
         response: 'Acknowledgment sent',
         audioUrl: hasMedia ? MediaUrl0 : null,
-        processingTime: 0,
+        processingTime,
       });
 
       res.status(200).send("OK");
@@ -536,6 +566,86 @@ Focus sur les opportunités de croissance et recommandations stratégiques.`
   app.post("/api/whatsapp/status", async (req, res) => {
     console.log("WhatsApp status update:", req.body);
     res.status(200).send("OK");
+  });
+
+  // Voice Transcription - Convert audio to text using OpenAI Whisper
+  app.post("/api/voice/transcribe", async (req, res) => {
+    try {
+      const { audioUrl } = req.body;
+      
+      if (!audioUrl) {
+        return res.status(400).json({ error: "Missing audioUrl" });
+      }
+
+      const startTime = Date.now();
+      
+      // Download audio (with Twilio auth if it's a Twilio URL)
+      let audioBuffer: ArrayBuffer;
+      if (audioUrl.includes('twilio.com')) {
+        const { fetchTwilioMedia } = await import('./twilio');
+        audioBuffer = await fetchTwilioMedia(audioUrl);
+      } else {
+        const audioResponse = await fetch(audioUrl);
+        if (!audioResponse.ok) {
+          return res.status(400).json({ error: "Failed to fetch audio" });
+        }
+        audioBuffer = await audioResponse.arrayBuffer();
+      }
+
+      const audioFile = new File([audioBuffer], "audio.ogg", { type: "audio/ogg" });
+
+      // Transcribe using OpenAI Whisper
+      const transcription = await openai.audio.transcriptions.create({
+        file: audioFile,
+        model: "whisper-1",
+        language: "fr", // French for Caribbean users
+      });
+
+      const processingTime = Date.now() - startTime;
+
+      res.json({
+        text: transcription.text,
+        processingTime,
+      });
+    } catch (error) {
+      console.error("Transcription error:", error);
+      res.status(500).json({ error: "Failed to transcribe audio" });
+    }
+  });
+
+  // Voice Reply - Convert text to speech using OpenAI TTS
+  app.post("/api/voice/reply", async (req, res) => {
+    try {
+      const { text } = req.body;
+      
+      if (!text) {
+        return res.status(400).json({ error: "Missing text" });
+      }
+
+      // Generate speech using OpenAI TTS
+      const mp3Response = await openai.audio.speech.create({
+        model: "tts-1",
+        voice: "nova", // Female voice, good for customer service
+        input: text,
+        response_format: "mp3",
+      });
+
+      // Convert response to buffer
+      const buffer = Buffer.from(await mp3Response.arrayBuffer());
+      
+      // For now, return as base64 data URL
+      // In production, upload to cloud storage and return URL
+      const base64Audio = buffer.toString('base64');
+      const audioUrl = `data:audio/mp3;base64,${base64Audio}`;
+
+      res.json({
+        audioUrl,
+        size: buffer.length,
+      });
+    } catch (error) {
+      console.error("TTS error:", error);
+      res.status(500).json({ error: "Failed to generate speech" });
+    }
   });
 
   const httpServer = createServer(app);

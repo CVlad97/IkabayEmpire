@@ -1594,6 +1594,10 @@ Reponds en JSON avec ce format:
     console.log("⚠️ Dropshipping will remain inactive until suppliers are configured");
   }
 
+  // Start scheduled tasks (12h sync)
+  const { startScheduledTasks } = await import("./lib/scheduler");
+  startScheduledTasks();
+
   const httpServer = createServer(app);
   return httpServer;
 }

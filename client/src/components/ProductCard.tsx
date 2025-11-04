@@ -75,9 +75,16 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
         
         <div className="p-6 space-y-4">
           <div>
-            <Badge variant="secondary" className="mb-2 text-xs" data-testid={`badge-category-${product.id}`}>
-              {product.category}
-            </Badge>
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="secondary" className="text-xs" data-testid={`badge-category-${product.id}`}>
+                {product.category}
+              </Badge>
+              {product.source && product.source !== "local" && (
+                <Badge variant="outline" className="text-xs bg-ikabay-orange/10 text-ikabay-orange border-ikabay-orange/30" data-testid={`badge-source-${product.id}`}>
+                  Source: {product.source.toUpperCase()}
+                </Badge>
+              )}
+            </div>
             <h3 className="font-display font-semibold text-xl mb-2" data-testid={`text-product-name-${product.id}`}>
               {product.name}
             </h3>

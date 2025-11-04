@@ -1,0 +1,65 @@
+##############################################
+# 🌴 IKABAY EMPIRE v2.4 – TRUST & FLOW ENGINE
+# Objectif : Fluidité totale, sécurité, multi-plateforme
+# et géolocalisation mutualisée des points relais & livreurs
+##############################################
+
+🎯 Missions principales :
+1️⃣ Implémenter carte interactive (Leaflet.js + OpenStreetMap)
+   - /relay-map → liste des relais + positions + statut actif
+   - /missions → trajets optimisés via OpenRouteService API
+2️⃣ Créer /relay-registration
+   - Formulaire partenaire avec géolocalisation GPS
+   - Sélection type : relais / livreur / stockage / food partner
+   - CGV + transfert responsabilité + signature numérique
+3️⃣ Développer /relay-dashboard
+   - KPI par zone : volume colis, délais, satisfaction moyenne
+   - Carte dynamique des zones sous-desservies
+4️⃣ Intégrer AI Zone Optimizer (Gemini)
+   - Analyse couverture géographique
+   - Suggestion nouveaux relais / livreurs par densité
+5️⃣ Connecter avec Delikreol Delivery
+   - Commandes food → affectation auto relais proche
+   - Statut “en route / livré” temps réel
+6️⃣ Automatiser IKB Rewards
+   - 10 IKB / livraison confirmée
+   - 25 IKB / relais actif (hebdo)
+   - Bonus fidélité zone
+7️⃣ Adapter Design responsive
+   - Layout adaptatif (mobile / tablette / desktop)
+   - Transitions fluides (Framer Motion)
+   - PWA compatible offline
+8️⃣ Sécuriser API et Auth
+   - Helmet.js + JWT + rate limiting
+   - Validation Zod des entrées utilisateurs
+9️⃣ Ajouter AI Review Layer
+   - 3 critères : coût / qualité / service
+   - Badge “Avis vérifié IA”
+🔟 Finaliser RGPD & consentement (Supabase + Twilio)
+
+##############################################
+## 🌍 MODULE GÉOLOCALISATION
+##############################################
+- Table `relay_points` : id, name, type, lat, lng, partner_id, status
+- Table `missions` : id, relay_id, deliverer_id, customer_id, status, route_data
+- Mapbox/Leaflet composant responsive avec clustering dynamique
+- AI optimisation des zones (via Gemini API)
+
+##############################################
+## 💬 USER FLOW
+##############################################
+1. Client choisit son mode → géolocalisation auto
+2. Carte affiche relais disponibles et délais estimés
+3. Sélection & validation CGV
+4. Suivi temps réel + notifications WhatsApp
+5. Paiement IKB/USDC + cashback
+6. Feedback 3 critères → IA calcule score de fiabilité
+
+##############################################
+## 🧠 AI OPTIMISATION
+##############################################
+- Gemini → propose relais manquants selon densité population/commandes
+- OpenAI → storytelling local & messages de confiance personnalisés
+- Price Engine → calcule prix + délai + impact carbone
+
+echo "✅ IKABAY EMPIRE v2.4 lancé – Réseau logistique géolocalisé, fluide, éthique et 100 % fiable 🌎🚀"

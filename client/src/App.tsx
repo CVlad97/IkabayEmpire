@@ -13,6 +13,7 @@ import RelayMap from "@/pages/RelayMap";
 import PartnerRegistration from "@/pages/PartnerRegistration";
 import DropshippingAdmin from "@/pages/DropshippingAdmin";
 import PriceCalculatorPage from "@/pages/PriceCalculatorPage";
+import SectionRedirect from "@/pages/SectionRedirect";
 import NotFound from "@/pages/not-found";
 
 function RouterContent() {
@@ -37,6 +38,8 @@ function RouterContent() {
         <Route path="/relay-map" component={RelayMap} />
         <Route path="/partner-registration" component={PartnerRegistration} />
         <Route path="/calculateur-prix" component={PriceCalculatorPage} />
+        <Route path="/wallet" component={() => <SectionRedirect sectionId="crypto" />} />
+        <Route path="/food" component={() => <SectionRedirect sectionId="delikreol" />} />
         <Route path="/admin" component={Admin} />
         <Route path="/dropshipping" component={DropshippingAdmin} />
         <Route component={NotFound} />

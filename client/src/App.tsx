@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
+import BottomNav from "@/components/BottomNav";
 import Home from "@/pages/Home";
 import Admin from "@/pages/Admin";
 import Landing from "@/pages/Landing";
@@ -14,7 +15,7 @@ import DropshippingAdmin from "@/pages/DropshippingAdmin";
 import PriceCalculatorPage from "@/pages/PriceCalculatorPage";
 import NotFound from "@/pages/not-found";
 
-function Router() {
+function RouterContent() {
   const { isAuthenticated, isLoading } = useAuth();
 
   // Show landing page while loading or if not authenticated
@@ -27,18 +28,21 @@ function Router() {
     );
   }
 
-  // Show authenticated routes
+  // Show authenticated routes with BottomNav
   return (
-    <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/produits-locaux" component={ProduitsLocaux} />
-      <Route path="/relay-map" component={RelayMap} />
-      <Route path="/partner-registration" component={PartnerRegistration} />
-      <Route path="/calculateur-prix" component={PriceCalculatorPage} />
-      <Route path="/admin" component={Admin} />
-      <Route path="/dropshipping" component={DropshippingAdmin} />
-      <Route component={NotFound} />
-    </Switch>
+    <>
+      <Switch>
+        <Route path="/" component={Home} />
+        <Route path="/produits-locaux" component={ProduitsLocaux} />
+        <Route path="/relay-map" component={RelayMap} />
+        <Route path="/partner-registration" component={PartnerRegistration} />
+        <Route path="/calculateur-prix" component={PriceCalculatorPage} />
+        <Route path="/admin" component={Admin} />
+        <Route path="/dropshipping" component={DropshippingAdmin} />
+        <Route component={NotFound} />
+      </Switch>
+      <BottomNav />
+    </>
   );
 }
 
@@ -47,7 +51,9 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <Router />
+        <div className="pb-16 md:pb-0">
+          <RouterContent />
+        </div>
       </TooltipProvider>
     </QueryClientProvider>
   );

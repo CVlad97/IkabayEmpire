@@ -1,11 +1,7 @@
 import { useEffect } from "react";
 import { useLocation } from "wouter";
 
-interface SectionRedirectProps {
-  sectionId: string;
-}
-
-export default function SectionRedirect({ sectionId }: SectionRedirectProps) {
+export default function FoodPage() {
   const [, navigate] = useLocation();
 
   useEffect(() => {
@@ -14,14 +10,14 @@ export default function SectionRedirect({ sectionId }: SectionRedirectProps) {
     setTimeout(() => {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          const element = document.getElementById(sectionId);
+          const element = document.getElementById("delikreol");
           if (element) {
             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }
         });
       });
     }, 300);
-  }, [sectionId, navigate]);
+  }, [navigate]);
 
   return null;
 }

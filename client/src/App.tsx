@@ -11,6 +11,7 @@ import ProduitsLocaux from "@/pages/ProduitsLocaux";
 import RelayMap from "@/pages/RelayMap";
 import PartnerRegistration from "@/pages/PartnerRegistration";
 import DropshippingAdmin from "@/pages/DropshippingAdmin";
+import PriceCalculatorPage from "@/pages/PriceCalculatorPage";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -33,6 +34,7 @@ function Router() {
       <Route path="/produits-locaux" component={ProduitsLocaux} />
       <Route path="/relay-map" component={RelayMap} />
       <Route path="/partner-registration" component={PartnerRegistration} />
+      <Route path="/calculateur-prix" component={PriceCalculatorPage} />
       <Route path="/admin" component={Admin} />
       <Route path="/dropshipping" component={DropshippingAdmin} />
       <Route component={NotFound} />

@@ -11,8 +11,12 @@ import {
   type WhatsAppSession, type InsertWhatsAppSession,
   type VoiceLog, type InsertVoiceLog,
   type RewardsHistory, type InsertRewardsHistory,
+  type Artisan, type InsertArtisan,
+  type ProduitLocal, type InsertProduitLocal,
+  type LegalSignature, type InsertLegalSignature,
   products, foodItems, wallets, transactions, userActivity, users,
-  partners, missions, relays, whatsappSessions, voiceLogs, rewardsHistory
+  partners, missions, relays, whatsappSessions, voiceLogs, rewardsHistory,
+  artisans, produitsLocaux, legalSignatures
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
@@ -86,6 +90,27 @@ export interface IStorage {
   getRewardsHistory(userId: string): Promise<RewardsHistory[]>;
   getAllRewardsHistory(): Promise<RewardsHistory[]>;
   createRewardsHistory(reward: InsertRewardsHistory): Promise<RewardsHistory>;
+  
+  // Artisans (IKABAY EMPIRE v2.2)
+  getArtisan(id: string): Promise<Artisan | undefined>;
+  getArtisans(): Promise<Artisan[]>;
+  getArtisansByRegion(region: string): Promise<Artisan[]>;
+  createArtisan(artisan: InsertArtisan): Promise<Artisan>;
+  updateArtisan(id: string, updates: Partial<Artisan>): Promise<Artisan>;
+  
+  // Produits Locaux (IKABAY EMPIRE v2.2)
+  getProduitLocal(id: string): Promise<ProduitLocal | undefined>;
+  getProduitsLocaux(): Promise<ProduitLocal[]>;
+  getProduitsByArtisan(artisanId: string): Promise<ProduitLocal[]>;
+  createProduitLocal(produit: InsertProduitLocal): Promise<ProduitLocal>;
+  updateProduitLocal(id: string, updates: Partial<ProduitLocal>): Promise<ProduitLocal>;
+  
+  // Legal Signatures (IKABAY EMPIRE v2.2)
+  getLegalSignature(id: string): Promise<LegalSignature | undefined>;
+  getLegalSignatures(): Promise<LegalSignature[]>;
+  getLegalSignaturesByStatus(status: string): Promise<LegalSignature[]>;
+  createLegalSignature(signature: InsertLegalSignature): Promise<LegalSignature>;
+  updateLegalSignature(id: string, updates: Partial<LegalSignature>): Promise<LegalSignature>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -383,6 +408,102 @@ export class DatabaseStorage implements IStorage {
 
   async createRewardsHistory(insertReward: InsertRewardsHistory): Promise<RewardsHistory> {
     const result = await db.insert(rewardsHistory).values(insertReward).returning();
+    return result[0];
+  }
+
+  // Artisans (IKABAY EMPIRE v2.2)
+  async getArtisan(id: string): Promise<Artisan | undefined> {
+    const result = await db.select().from(artisans).where(eq(artisans.id, id));
+    return result[0];
+  }
+
+  async getArtisans(): Promise<Artisan[]> {
+    return await db.select().from(artisans);
+  }
+
+  async getArtisansByRegion(region: string): Promise<Artisan[]> {
+    return await db.select().from(artisans).where(eq(artisans.region, region));
+  }
+
+  async createArtisan(insertArtisan: InsertArtisan): Promise<Artisan> {
+    const result = await db.insert(artisans).values(insertArtisan).returning();
+    return result[0];
+  }
+
+  async updateArtisan(id: string, updates: Partial<Artisan>): Promise<Artisan> {
+    const result = await db
+      .update(artisans)
+      .set(updates)
+      .where(eq(artisans.id, id))
+      .returning();
+    
+    if (!result[0]) {
+      throw new Error("Artisan not found");
+    }
+    return result[0];
+  }
+
+  // Produits Locaux (IKABAY EMPIRE v2.2)
+  async getProduitLocal(id: string): Promise<ProduitLocal | undefined> {
+    const result = await db.select().from(produitsLocaux).where(eq(produitsLocaux.id, id));
+    return result[0];
+  }
+
+  async getProduitsLocaux(): Promise<ProduitLocal[]> {
+    return await db.select().from(produitsLocaux);
+  }
+
+  async getProduitsByArtisan(artisanId: string): Promise<ProduitLocal[]> {
+    return await db.select().from(produitsLocaux).where(eq(produitsLocaux.artisanId, artisanId));
+  }
+
+  async createProduitLocal(insertProduit: InsertProduitLocal): Promise<ProduitLocal> {
+    const result = await db.insert(produitsLocaux).values(insertProduit).returning();
+    return result[0];
+  }
+
+  async updateProduitLocal(id: string, updates: Partial<ProduitLocal>): Promise<ProduitLocal> {
+    const result = await db
+      .update(produitsLocaux)
+      .set(updates)
+      .where(eq(produitsLocaux.id, id))
+      .returning();
+    
+    if (!result[0]) {
+      throw new Error("Produit local not found");
+    }
+    return result[0];
+  }
+
+  // Legal Signatures (IKABAY EMPIRE v2.2)
+  async getLegalSignature(id: string): Promise<LegalSignature | undefined> {
+    const result = await db.select().from(legalSignatures).where(eq(legalSignatures.id, id));
+    return result[0];
+  }
+
+  async getLegalSignatures(): Promise<LegalSignature[]> {
+    return await db.select().from(legalSignatures);
+  }
+
+  async getLegalSignaturesByStatus(status: string): Promise<LegalSignature[]> {
+    return await db.select().from(legalSignatures).where(eq(legalSignatures.status, status));
+  }
+
+  async createLegalSignature(insertSignature: InsertLegalSignature): Promise<LegalSignature> {
+    const result = await db.insert(legalSignatures).values(insertSignature).returning();
+    return result[0];
+  }
+
+  async updateLegalSignature(id: string, updates: Partial<LegalSignature>): Promise<LegalSignature> {
+    const result = await db
+      .update(legalSignatures)
+      .set(updates)
+      .where(eq(legalSignatures.id, id))
+      .returning();
+    
+    if (!result[0]) {
+      throw new Error("Legal signature not found");
+    }
     return result[0];
   }
 }

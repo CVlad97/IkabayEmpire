@@ -323,3 +323,85 @@ export type AIIntentResponse = {
   action?: string;
   data?: any;
 };
+
+// ========================================
+// IKABAY EMPIRE v2.2 - LOCAL STARS
+// ========================================
+
+// Artisans (local Caribbean producers)
+export const artisans = pgTable("artisans", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  bio: text("bio").notNull(),
+  region: text("region").notNull(), // 'Martinique', 'Guadeloupe', etc.
+  image: text("image").notNull(),
+  videoUrl: text("video_url"),
+  specialty: text("specialty").notNull(), // 'Artisan de rhum', 'Créateur de bijoux', etc.
+  certified: boolean("certified").notNull().default(true), // 'Made in Caribbean' certification
+  contactEmail: varchar("contact_email"),
+  contactPhone: varchar("contact_phone"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertArtisanSchema = createInsertSchema(artisans).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertArtisan = z.infer<typeof insertArtisanSchema>;
+export type Artisan = typeof artisans.$inferSelect;
+
+// Local products (Caribbean-made items)
+export const produitsLocaux = pgTable("produits_locaux", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  artisanId: text("artisan_id").notNull(),
+  name: text("name").notNull(),
+  price: real("price").notNull(),
+  description: text("description").notNull(),
+  storyFr: text("story_fr"), // AI-generated storytelling in French
+  storyEn: text("story_en"), // AI-generated storytelling in English
+  storyCreole: text("story_creole"), // AI-generated storytelling in Creole
+  images: text("images").array().notNull(), // multiple product images
+  videoUrl: text("video_url"),
+  origin: text("origin").notNull(), // specific location/island
+  inStock: boolean("in_stock").notNull().default(true),
+  certifiedLocal: boolean("certified_local").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertProduitLocalSchema = createInsertSchema(produitsLocaux).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertProduitLocal = z.infer<typeof insertProduitLocalSchema>;
+export type ProduitLocal = typeof produitsLocaux.$inferSelect;
+
+// Legal signatures (partner consent tracking)
+export const legalSignatures = pgTable("legal_signatures", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: text("user_id"),
+  partnerType: text("partner_type").notNull(), // 'livreur', 'relais', 'fournisseur'
+  name: text("name").notNull(),
+  email: varchar("email").notNull(),
+  phone: varchar("phone").notNull(),
+  siret: varchar("siret"), // French business ID
+  zone: text("zone").notNull(),
+  cgvAccepted: boolean("cgv_accepted").notNull().default(false),
+  liabilityAccepted: boolean("liability_accepted").notNull().default(false),
+  ipAddress: varchar("ip_address"),
+  signatureData: text("signature_data"), // digital signature image/data
+  documentUrls: text("document_urls").array(), // uploaded documents
+  status: text("status").notNull().default('pending'), // 'pending', 'approved', 'rejected'
+  createdAt: timestamp("created_at").defaultNow(),
+  approvedAt: timestamp("approved_at"),
+});
+
+export const insertLegalSignatureSchema = createInsertSchema(legalSignatures).omit({
+  id: true,
+  createdAt: true,
+  approvedAt: true,
+});
+
+export type InsertLegalSignature = z.infer<typeof insertLegalSignatureSchema>;
+export type LegalSignature = typeof legalSignatures.$inferSelect;

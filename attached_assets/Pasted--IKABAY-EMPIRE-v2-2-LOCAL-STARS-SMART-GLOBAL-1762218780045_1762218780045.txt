@@ -1,0 +1,59 @@
+##############################################
+# 🌴 IKABAY EMPIRE v2.2 – LOCAL STARS & SMART GLOBAL LOGISTICS
+# Auteur : Vladimir CLAVEAU
+# Objectif : Fusionner authenticité caribéenne et logistique mondiale automatisée
+##############################################
+
+🎯 Priorités Phase 1 :
+1️⃣ Créer /produits-locaux (artisans + storytelling IA multilingue)
+2️⃣ Créer /partenaire-inscription (multi-rôle + CGV + signature)
+3️⃣ Ajouter /missions et /relay (cartographie + gestion livraisons)
+4️⃣ Mettre en place API /api/legal/consent et stockage Supabase
+5️⃣ Design caraïbe moderne (Lottie, Framer Motion, data-light)
+
+🎯 Priorités Phase 2 :
+6️⃣ Connecter AutoDS + Zendrop API
+7️⃣ Développer AI “All-Inclusive Price Engine” (produit + taxes + transport)
+8️⃣ Activer scraping Gemini (veille concurrentielle prix)
+9️⃣ Calculer score qualité/prix/volume + label “Top Deal”
+
+🎯 Priorités Phase 3 :
+🔟 Intégrer crypto stable IKB-USDC (testnet)
+11️⃣ Ajouter récompenses automatiques (10 IKB / livraison, etc.)
+12️⃣ Publier version stable + marketing WhatsApp “Deviens Partenaire”
+
+##############################################
+## 🧩 PRODUITS LOCAUX
+##############################################
+- Table artisans : id, nom, bio, région, images, vidéo
+- Table produits_locaux : id, nom, prix, description, artisan_id
+- OpenAI GPT-5 storytelling + traduction EN/CRÉOLE
+- Label “Made in Caribbean – Artisan Certifié”
+
+##############################################
+## 🚚 LOGISTIQUE INTELLIGENTE
+##############################################
+- Missions CRUD : create, assign, complete
+- Relais : géolocalisation, points relais partenaires
+- AI Price Engine : (prix_produit + import + TVA + livraison)
+- Zendrop + AutoDS API sync
+- Twilio WhatsApp : statut livraison & confirmation CGV
+
+##############################################
+## ⚖️ LÉGALITÉ
+##############################################
+- Formulaire partenaires : SIRET, identité, rôle, zone
+- CGV + transfert responsabilité
+- Signature numérique (IP, timestamp)
+- Table legal_signatures
+- Confirmation via WhatsApp
+
+##############################################
+## 🎨 DESIGN
+##############################################
+- Animations Lottie JSON (vague, carte Caraïbe, logistique fluide)
+- Palette : orange #FF914D, vert #2ECC71, bleu lagon #007B8A
+- Mode data-light mobile-first
+- Framer Motion transitions douces
+
+echo "✅ IKABAY EMPIRE v2.2 déployé avec succès – Local Stars & Smart Global Logistics 🌎🚀"

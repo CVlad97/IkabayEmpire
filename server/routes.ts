@@ -93,6 +93,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============ RELAY POINTS API (v2.4 Interactive Map) ============
+  
+  // Get all relay points with optional filtering
+  app.get("/api/relay-points", async (req, res) => {
+    try {
+      const { zone, status } = req.query;
+      let relays = await storage.getRelays();
+
+      // Filter by zone if provided
+      if (zone && typeof zone === 'string') {
+        relays = relays.filter(r => r.zone.toLowerCase() === zone.toLowerCase());
+      }
+
+      // Filter by status if provided
+      if (status && typeof status === 'string') {
+        relays = relays.filter(r => r.status === status);
+      }
+
+      // Enrich with partner information
+      const enrichedRelays = await Promise.all(
+        relays.map(async (relay) => {
+          let partner = null;
+          if (relay.operatorId) {
+            const partners = await storage.getPartners();
+            partner = partners.find(p => p.id === relay.operatorId);
+          }
+          return {
+            ...relay,
+            partner,
+          };
+        })
+      );
+
+      res.json(enrichedRelays);
+    } catch (error) {
+      console.error("Error fetching relay points:", error);
+      res.status(500).json({ error: "Failed to fetch relay points" });
+    }
+  });
+
+  // Get single relay point with details
+  app.get("/api/relay-points/:id", async (req, res) => {
+    try {
+      const relay = await storage.getRelay(req.params.id);
+      if (!relay) {
+        return res.status(404).json({ error: "Relay point not found" });
+      }
+
+      let partner = null;
+      if (relay.operatorId) {
+        const partners = await storage.getPartners();
+        partner = partners.find(p => p.id === relay.operatorId);
+      }
+
+      res.json({ ...relay, partner });
+    } catch (error) {
+      console.error("Error fetching relay point:", error);
+      res.status(500).json({ error: "Failed to fetch relay point" });
+    }
+  });
+
+  // Get delivery drivers/partners
+  app.get("/api/partners", async (req, res) => {
+    try {
+      const { type, status, zone } = req.query;
+      let partners = await storage.getPartners();
+
+      // Filter by type if provided
+      if (type && typeof type === 'string') {
+        partners = partners.filter(p => p.type === type);
+      }
+
+      // Filter by status if provided
+      if (status && typeof status === 'string') {
+        partners = partners.filter(p => p.status === status);
+      }
+
+      // Filter by zone if provided
+      if (zone && typeof zone === 'string') {
+        partners = partners.filter(p => p.zone?.toLowerCase() === zone.toLowerCase());
+      }
+
+      res.json(partners);
+    } catch (error) {
+      console.error("Error fetching partners:", error);
+      res.status(500).json({ error: "Failed to fetch partners" });
+    }
+  });
+
   // Products - Get all products
   app.get("/api/products", async (req, res) => {
     try {
@@ -986,8 +1075,169 @@ Reponds en JSON avec ce format:
     }
   }
 
+  // Seed relay points for interactive map (v2.4)
+  async function seedRelayPoints() {
+    try {
+      const existingRelays = await storage.getRelays();
+      if (existingRelays.length > 0) {
+        console.log("✓ Relay points already seeded");
+        return;
+      }
+
+      console.log("Seeding Caribbean relay points...");
+
+      // Martinique Relay Points
+      await storage.createRelay({
+        name: "Relais IKABAY Fort-de-France Centre",
+        address: "12 Rue Victor Hugo, 97200 Fort-de-France",
+        coords: { lat: 14.6098, lng: -61.0738 },
+        zone: "Martinique",
+        phone: "+596 596 71 23 45",
+        whatsappNumber: "+596 696 71 23 45",
+        capacity: 100,
+        currentLoad: 45,
+        status: "active",
+        hoursOpen: "8h-19h Lun-Sam",
+      });
+
+      await storage.createRelay({
+        name: "Point Relais Le Lamentin",
+        address: "Zone Industrielle Place d'Armes, 97232 Le Lamentin",
+        coords: { lat: 14.6167, lng: -61.0167 },
+        zone: "Martinique",
+        phone: "+596 596 50 12 34",
+        whatsappNumber: "+596 696 50 12 34",
+        capacity: 150,
+        currentLoad: 120,
+        status: "full",
+        hoursOpen: "7h-20h Tous les jours",
+      });
+
+      await storage.createRelay({
+        name: "Relais Schoelcher Marina",
+        address: "Front de Mer, 97233 Schoelcher",
+        coords: { lat: 14.6166, lng: -61.1019 },
+        zone: "Martinique",
+        phone: "+596 596 61 78 90",
+        capacity: 75,
+        currentLoad: 23,
+        status: "active",
+        hoursOpen: "9h-18h Lun-Ven",
+      });
+
+      await storage.createRelay({
+        name: "Point Relais Trois-Îlets",
+        address: "Village de la Poterie, 97229 Trois-Îlets",
+        coords: { lat: 14.5383, lng: -61.0397 },
+        zone: "Martinique",
+        phone: "+596 596 68 34 56",
+        whatsappNumber: "+596 696 68 34 56",
+        capacity: 60,
+        currentLoad: 18,
+        status: "active",
+        hoursOpen: "8h-17h Lun-Sam",
+      });
+
+      // Guadeloupe Relay Points
+      await storage.createRelay({
+        name: "Relais IKABAY Pointe-à-Pitre",
+        address: "Place de la Victoire, 97110 Pointe-à-Pitre",
+        coords: { lat: 16.2411, lng: -61.5331 },
+        zone: "Guadeloupe",
+        phone: "+590 590 82 45 67",
+        whatsappNumber: "+590 690 82 45 67",
+        capacity: 120,
+        currentLoad: 67,
+        status: "active",
+        hoursOpen: "8h-19h Lun-Sam",
+      });
+
+      await storage.createRelay({
+        name: "Point Relais Gosier Marina",
+        address: "Marina du Gosier, 97190 Le Gosier",
+        coords: { lat: 16.1975, lng: -61.5058 },
+        zone: "Guadeloupe",
+        phone: "+590 590 84 12 34",
+        capacity: 80,
+        currentLoad: 34,
+        status: "active",
+        hoursOpen: "9h-18h Tous les jours",
+      });
+
+      await storage.createRelay({
+        name: "Relais Baie-Mahault Zone",
+        address: "ZI Jarry, 97122 Baie-Mahault",
+        coords: { lat: 16.2667, lng: -61.5833 },
+        zone: "Guadeloupe",
+        phone: "+590 590 26 78 90",
+        whatsappNumber: "+590 690 26 78 90",
+        capacity: 200,
+        currentLoad: 156,
+        status: "active",
+        hoursOpen: "7h-21h Tous les jours",
+      });
+
+      // Saint-Martin
+      await storage.createRelay({
+        name: "Relais IKABAY Marigot",
+        address: "Rue de la République, 97150 Marigot",
+        coords: { lat: 18.0679, lng: -63.0827 },
+        zone: "Saint-Martin",
+        phone: "+590 590 87 56 78",
+        capacity: 50,
+        currentLoad: 12,
+        status: "active",
+        hoursOpen: "8h-18h Lun-Sam",
+      });
+
+      // Saint-Barthélemy
+      await storage.createRelay({
+        name: "Point Relais Gustavia",
+        address: "Quai du Général de Gaulle, 97133 Gustavia",
+        coords: { lat: 17.8962, lng: -62.8498 },
+        zone: "Saint-Barthélemy",
+        phone: "+590 590 27 89 01",
+        capacity: 40,
+        currentLoad: 8,
+        status: "active",
+        hoursOpen: "9h-17h Lun-Ven",
+      });
+
+      // La Réunion (DOM-TOM)
+      await storage.createRelay({
+        name: "Relais IKABAY Saint-Denis",
+        address: "Rue Maréchal Leclerc, 97400 Saint-Denis",
+        coords: { lat: -20.8824, lng: 55.4504 },
+        zone: "La Réunion",
+        phone: "+262 262 41 23 45",
+        whatsappNumber: "+262 692 41 23 45",
+        capacity: 90,
+        currentLoad: 45,
+        status: "active",
+        hoursOpen: "8h-19h Lun-Sam",
+      });
+
+      await storage.createRelay({
+        name: "Point Relais Saint-Pierre",
+        address: "Front de Mer, 97410 Saint-Pierre",
+        coords: { lat: -21.3394, lng: 55.4784 },
+        zone: "La Réunion",
+        phone: "+262 262 35 67 89",
+        capacity: 70,
+        currentLoad: 28,
+        status: "active",
+        hoursOpen: "8h-18h Lun-Sam",
+      });
+
+      console.log("✓ Successfully seeded relay points data");
+    } catch (error) {
+      console.error("Error seeding relay points:", error);
+    }
+  }
+
   // Initialize seed data on startup
   await seedLocalProducts();
+  await seedRelayPoints();
 
   const httpServer = createServer(app);
   return httpServer;

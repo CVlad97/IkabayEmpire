@@ -6,6 +6,15 @@ IKABAY EMPIRE is a comprehensive Caribbean-focused e-commerce and rewards ecosys
 
 ## Recent Changes (November 4, 2025)
 
+### ✅ v2.4 INTERACTIVE RELAY MAP - Complete
+- **Carte des Relais**: Interactive Leaflet map showing 11 Caribbean relay points
+- **Real-time Filtering**: Zone (Martinique, Guadeloupe, etc.) and status (active/full/inactive) filters
+- **Marker Clustering**: MarkerClusterGroup for dense areas with custom colored markers
+- **Relay Details Panel**: Click marker to see capacity, hours, contact, WhatsApp link
+- **Seed Data**: 11 relay points across Martinique (4), Guadeloupe (3), Saint-Martin, Saint-Barthélemy, La Réunion (2)
+- **API Routes**: GET /api/relay-points with zone/status filtering, GET /api/partners
+- **E2E Tested**: All features verified (login, navigation, filtering, marker interaction)
+
 ### ✅ v2.4 PHASE 1 - TRUST & FLOW ENGINE Database Foundation
 - **New Tables Added**:
   - `partner_reviews`: AI-verified 3-criteria feedback system (cost/quality/service scoring)

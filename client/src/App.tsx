@@ -8,6 +8,7 @@ import Home from "@/pages/Home";
 import Admin from "@/pages/Admin";
 import Landing from "@/pages/Landing";
 import ProduitsLocaux from "@/pages/ProduitsLocaux";
+import RelayMap from "@/pages/RelayMap";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -28,6 +29,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/produits-locaux" component={ProduitsLocaux} />
+      <Route path="/relay-map" component={RelayMap} />
       <Route path="/admin" component={Admin} />
       <Route component={NotFound} />
     </Switch>

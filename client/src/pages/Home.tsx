@@ -3,7 +3,7 @@ import Marketplace from "@/components/Marketplace";
 import Delikreol from "@/components/Delikreol";
 import CryptoDashboard from "@/components/CryptoDashboard";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, UtensilsCrossed, Wallet, BarChart3 } from "lucide-react";
+import { ShoppingBag, UtensilsCrossed, Wallet, BarChart3, MapPin } from "lucide-react";
 import { Link } from "wouter";
 
 export default function Home() {
@@ -27,6 +27,12 @@ export default function Home() {
               <ShoppingBag className="w-4 h-4 mr-2" />
               Commencer maintenant
             </Button>
+            <Link href="/relay-map">
+              <Button variant="secondary" size="lg" className="px-8 font-semibold" data-testid="button-relay-map">
+                <MapPin className="w-4 h-4 mr-2" />
+                Carte des Relais
+              </Button>
+            </Link>
             <Link href="/admin">
               <Button variant="outline" size="lg" className="px-8 font-semibold" data-testid="button-admin">
                 <BarChart3 className="w-4 h-4 mr-2" />
@@ -61,7 +67,9 @@ export default function Home() {
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="hover:text-foreground cursor-pointer transition-colors">Restaurants</li>
                 <li className="hover:text-foreground cursor-pointer transition-colors">Menu</li>
-                <li className="hover:text-foreground cursor-pointer transition-colors">Livraison</li>
+                <Link href="/relay-map">
+                  <li className="hover:text-foreground cursor-pointer transition-colors">Points Relais</li>
+                </Link>
               </ul>
             </div>
             <div>

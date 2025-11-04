@@ -1,0 +1,51 @@
+##############################################
+# 🌴 IKABAY EMPIRE v2.1 - LEGAL & LOGISTICS UPGRADE
+# Auteur : Vladimir CLAVEAU
+# Objectif : Corriger tous les bugs, ajouter formulaires légaux,
+# automatiser l'intégration partenaires et fluidifier l'expérience.
+##############################################
+
+✅ Missions principales :
+1️⃣ Corriger les erreurs par page (marketplace, relay, missions)
+2️⃣ Créer le module /partenaire-inscription (IA-guidé)
+3️⃣ Ajouter clause de transfert de responsabilité (CGV + consent)
+4️⃣ Créer API /api/legal/consent et /api/partners/register
+5️⃣ Stocker documents et signatures dans Supabase (legal_signatures)
+6️⃣ Connecter AutoDS + Zendrop API pour logistique automatisée
+7️⃣ Ajouter design animé léger (Lottie + Framer Motion)
+8️⃣ Mettre en place mode “data-light” mobile
+9️⃣ Vérifier synchronisation AI WhatsApp avec réponses légales
+🔟 Déployer IKABAY EMPIRE v2.1 stable et fluide
+
+##############################################
+## 🧾 FORMULAIRE PARTENAIRE
+##############################################
+- /partenaire-inscription : multi-rôle (livreur, relais, fournisseur)
+- Champs : nom, email, zone, activité, upload, signature
+- Acceptation CGV obligatoire
+- Clause juridique de décharge insérée avant validation
+- Auto-validation si conformité légale détectée
+- Envoi de lien CGV + statut via WhatsApp (Twilio)
+
+##############################################
+## ⚙️ INTEGRATIONS
+##############################################
+- AutoDS API (product sync)
+- Zendrop Webhook (stock)
+- Supabase tables : partners_applications, legal_signatures, missions
+- OpenAI GPT-5 (IA guide inscription)
+- Twilio WhatsApp webhook (confirmation auto)
+- Stripe Crypto / Solana SDK (paiement stablecoin)
+- Leaflet Map clustering (optimisation relais)
+- Lottie animation (low data)
+
+##############################################
+## 🎨 DESIGN
+##############################################
+- SVG animés légers (vague, carte Caraïbe)
+- Palette : orange #FF914D, vert #2ECC71, bleu lagon #007B8A
+- Mode data-light auto (mobile)
+- Transitions fluides (opacity, translateY)
+- Image banners illustrant fluidité logistique
+
+echo "✅ IKABAY EMPIRE v2.1 - Legal & Logistics Upgrade déployé avec succès 🚀"

@@ -182,6 +182,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Partner Registration - Public route (authenticated)
+  app.post("/api/partners/register", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+      
+      // Validate request body
+      const { insertPartnerSchema } = await import("../shared/schema");
+      const validatedData = insertPartnerSchema.parse(req.body);
+
+      // Check if user already has a partner registration
+      const existingPartners = await storage.getPartners();
+      const existingPartner = existingPartners.find(p => p.userId === userId);
+      
+      if (existingPartner) {
+        return res.status(400).json({ 
+          error: "Vous avez déjà une demande de partenariat en cours ou approuvée" 
+        });
+      }
+
+      // Create partner registration
+      const partner = await storage.createPartner({
+        ...validatedData,
+        userId,
+        registrationIp: Array.isArray(ip) ? ip[0] : ip,
+        cgvAcceptedAt: validatedData.cgvAccepted ? new Date() : undefined,
+        status: 'pending',
+      });
+
+      res.json({
+        success: true,
+        partner,
+        message: "Votre demande a été enregistrée. Vous serez notifié une fois approuvée.",
+      });
+    } catch (error: any) {
+      console.error("Error registering partner:", error);
+      res.status(400).json({ 
+        error: error.message || "Erreur lors de l'inscription" 
+      });
+    }
+  });
+
   // Products - Get all products
   app.get("/api/products", async (req, res) => {
     try {

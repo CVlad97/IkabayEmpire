@@ -9,6 +9,7 @@ import Admin from "@/pages/Admin";
 import Landing from "@/pages/Landing";
 import ProduitsLocaux from "@/pages/ProduitsLocaux";
 import RelayMap from "@/pages/RelayMap";
+import PartnerRegistration from "@/pages/PartnerRegistration";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -30,6 +31,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/produits-locaux" component={ProduitsLocaux} />
       <Route path="/relay-map" component={RelayMap} />
+      <Route path="/partner-registration" component={PartnerRegistration} />
       <Route path="/admin" component={Admin} />
       <Route component={NotFound} />
     </Switch>

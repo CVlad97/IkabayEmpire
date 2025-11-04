@@ -3,7 +3,7 @@ import Marketplace from "@/components/Marketplace";
 import Delikreol from "@/components/Delikreol";
 import CryptoDashboard from "@/components/CryptoDashboard";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, UtensilsCrossed, Wallet, BarChart3, MapPin } from "lucide-react";
+import { ShoppingBag, UtensilsCrossed, Wallet, BarChart3, MapPin, User } from "lucide-react";
 import { Link } from "wouter";
 
 export default function Home() {
@@ -27,6 +27,12 @@ export default function Home() {
               <ShoppingBag className="w-4 h-4 mr-2" />
               Commencer maintenant
             </Button>
+            <Link href="/partner-registration">
+              <Button variant="default" size="lg" className="px-8 font-semibold bg-ikabay-green hover:bg-ikabay-green/90" data-testid="button-become-partner">
+                <User className="w-4 h-4 mr-2" />
+                Devenir Partenaire
+              </Button>
+            </Link>
             <Link href="/relay-map">
               <Button variant="secondary" size="lg" className="px-8 font-semibold" data-testid="button-relay-map">
                 <MapPin className="w-4 h-4 mr-2" />

@@ -6,6 +6,18 @@ IKABAY EMPIRE is a comprehensive Caribbean-focused e-commerce and rewards ecosys
 
 ## Recent Changes (November 4, 2025)
 
+### ✅ v2.4 PARTNER REGISTRATION - Complete
+- **3-Step Wizard**: Info → Location → Validation with progress indicator
+- **Multi-Type Support**: Delivery drivers, relay operators, food partners, storage facilities
+- **GPS Location Picker**: Leaflet map with click-to-select coordinates, visual marker
+- **Digital Signature**: HTML5 canvas with signature capture, base64 storage
+- **Legal Compliance**: CGV acceptance with checkbox + signature, timestamp recording
+- **Security**: IP address tracking, authentication required, duplicate prevention
+- **Validation**: Zod schema with phone regex, email validation, empty string handling
+- **API Route**: POST /api/partners/register (authenticated, validates, sets status=pending)
+- **Navigation**: "Devenir Partenaire" CTA button on home page
+- **Status**: Ready for manual QA (Leaflet/Canvas interactions pending automated testing)
+
 ### ✅ v2.4 INTERACTIVE RELAY MAP - Complete
 - **Carte des Relais**: Interactive Leaflet map showing 11 Caribbean relay points
 - **Real-time Filtering**: Zone (Martinique, Guadeloupe, etc.) and status (active/full/inactive) filters

@@ -158,27 +158,64 @@ export type GeolocationData = {
 // IKABAY CONNECT v1.2 - WhatsApp + Voice AI
 // ========================================
 
-// Partners (delivery drivers, relay operators)
+// Partners (delivery drivers, relay operators, food partners, storage)
 export const partners = pgTable("partners", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: text("user_id").notNull(),
+  
+  // Basic info
+  name: text("name").notNull(), // Individual or company name
   phone: varchar("phone").notNull().unique(),
   whatsappNumber: varchar("whatsapp_number"),
-  type: text("type").notNull(), // 'delivery_driver', 'relay_operator'
-  status: text("status").notNull().default('pending'), // 'pending', 'approved', 'suspended'
-  vehicleType: text("vehicle_type"), // 'scooter', 'car', 'bike'
+  email: varchar("email"),
+  
+  // Partner type and specialization
+  type: text("type").notNull(), // 'delivery_driver', 'relay_operator', 'food_partner', 'storage'
+  status: text("status").notNull().default('pending'), // 'pending', 'approved', 'suspended', 'rejected'
+  
+  // Location and zone
   zone: text("zone"), // 'martinique', 'guadeloupe', etc.
+  address: text("address"),
+  coords: jsonb("coords"), // GPS {lat, lng} from registration picker
+  
+  // Vehicle/facility details
+  vehicleType: text("vehicle_type"), // 'scooter', 'car', 'bike', 'truck', null for relay/storage
+  storageCapacity: integer("storage_capacity"), // For relay/storage partners (number of packages)
+  
+  // Legal and compliance
+  cgvAccepted: boolean("cgv_accepted").notNull().default(false),
+  cgvAcceptedAt: timestamp("cgv_accepted_at"),
+  signatureData: text("signature_data"), // Base64 digital signature
+  registrationIp: varchar("registration_ip"), // IP address at registration
+  
+  // Performance tracking
   ikbBalance: real("ikb_balance").notNull().default(0),
   totalDeliveries: integer("total_deliveries").notNull().default(0),
   rating: real("rating").default(5.0),
+  
+  // Timestamps
   createdAt: timestamp("created_at").defaultNow(),
   approvedAt: timestamp("approved_at"),
+  rejectedAt: timestamp("rejected_at"),
+  rejectionReason: text("rejection_reason"),
 });
 
 export const insertPartnerSchema = createInsertSchema(partners).omit({
   id: true,
   createdAt: true,
   approvedAt: true,
+  rejectedAt: true,
+  ikbBalance: true,
+  totalDeliveries: true,
+  rating: true,
+}).extend({
+  coords: z.object({
+    lat: z.number().min(-90).max(90),
+    lng: z.number().min(-180).max(180),
+  }).optional(),
+  cgvAccepted: z.boolean().refine(val => val === true, {
+    message: "Vous devez accepter les CGV pour continuer",
+  }),
 });
 
 export type InsertPartner = z.infer<typeof insertPartnerSchema>;

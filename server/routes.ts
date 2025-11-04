@@ -427,6 +427,77 @@ Focus sur les opportunités de croissance et recommandations stratégiques.`
   });
 
   // ========================================
+  // IKABAY EMPIRE v2.2 - LOCAL STARS
+  // ========================================
+
+  // Get all artisans
+  app.get("/api/artisans", async (req, res) => {
+    try {
+      const artisans = await storage.getArtisans();
+      res.json(artisans);
+    } catch (error) {
+      console.error("Error fetching artisans:", error);
+      res.status(500).json({ error: "Failed to fetch artisans" });
+    }
+  });
+
+  // Get single artisan with their products
+  app.get("/api/artisans/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const artisan = await storage.getArtisan(id);
+      
+      if (!artisan) {
+        return res.status(404).json({ error: "Artisan not found" });
+      }
+
+      const produits = await storage.getProduitsByArtisan(id);
+      
+      res.json({
+        ...artisan,
+        produits,
+      });
+    } catch (error) {
+      console.error("Error fetching artisan:", error);
+      res.status(500).json({ error: "Failed to fetch artisan" });
+    }
+  });
+
+  // Get all local products
+  app.get("/api/produits-locaux", async (req, res) => {
+    try {
+      const produits = await storage.getProduitsLocaux();
+      res.json(produits);
+    } catch (error) {
+      console.error("Error fetching produits locaux:", error);
+      res.status(500).json({ error: "Failed to fetch produits locaux" });
+    }
+  });
+
+  // Get single product
+  app.get("/api/produits-locaux/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const produit = await storage.getProduitLocal(id);
+      
+      if (!produit) {
+        return res.status(404).json({ error: "Produit not found" });
+      }
+
+      // Get artisan info
+      const artisan = await storage.getArtisan(produit.artisanId);
+      
+      res.json({
+        ...produit,
+        artisan,
+      });
+    } catch (error) {
+      console.error("Error fetching produit:", error);
+      res.status(500).json({ error: "Failed to fetch produit" });
+    }
+  });
+
+  // ========================================
   // IKABAY CONNECT v1.2 - WhatsApp + Voice AI
   // ========================================
 
@@ -781,6 +852,142 @@ Reponds en JSON avec ce format:
       res.status(500).json({ error: "Failed to recognize intent" });
     }
   });
+
+  // ========================================
+  // SEED DATA - Caribbean Artisans & Products
+  // ========================================
+  
+  async function seedLocalProducts() {
+    try {
+      const existingArtisans = await storage.getArtisans();
+      if (existingArtisans.length > 0) {
+        console.log("✓ Artisan data already seeded");
+        return;
+      }
+
+      console.log("Seeding Caribbean artisan data...");
+
+      // Create artisans
+      const artisan1 = await storage.createArtisan({
+        name: "Marie-Claire Beauséjour",
+        bio: "Passionnée par les traditions caribéennes depuis plus de 30 ans, Marie-Claire perpétue l'art ancestral du rhum arrangé martiniquais. Chaque bouteille est une célébration de notre héritage créole.",
+        region: "Martinique",
+        image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=600&h=400&fit=crop",
+        specialty: "Maître Rhumier - Rhums Arrangés Artisanaux",
+        certified: true,
+        contactEmail: "marie@rhum-caraibe.mq",
+        contactPhone: "+596 696 12 34 56"
+      });
+
+      const artisan2 = await storage.createArtisan({
+        name: "Jean-Baptiste Delmas",
+        bio: "Artisan chocolatier de quatrième génération, Jean-Baptiste transforme le cacao antillais en œuvres d'art gustatives. Du bean-to-bar dans la pure tradition guadeloupéenne.",
+        region: "Guadeloupe",
+        image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=600&h=400&fit=crop",
+        specialty: "Maître Chocolatier Bean-to-Bar",
+        certified: true,
+        contactEmail: "jb@cacao-gwada.gp",
+        contactPhone: "+590 690 23 45 67"
+      });
+
+      const artisan3 = await storage.createArtisan({
+        name: "Evelyne Rochelle",
+        bio: "Designer textile inspirée par les couleurs vibrantes de la Caraïbe, Evelyne crée des accessoires uniques qui racontent l'histoire de nos îles. Chaque pièce est tissée à la main avec amour.",
+        region: "Sainte-Lucie",
+        image: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=600&h=400&fit=crop",
+        specialty: "Créatrice Textile & Accessoires Caribéens",
+        certified: true,
+        contactEmail: "evelyne@textile-stlucia.lc"
+      });
+
+      // Create products with AI storytelling
+      await storage.createProduitLocal({
+        artisanId: artisan1.id,
+        name: "Rhum Arrangé Ananas Victoria",
+        price: 28.90,
+        description: "Rhum blanc agricole infusé avec de l'ananas Victoria caramélisé, vanille bourbon et épices secrètes. Macération de 6 mois.",
+        storyFr: "Dans les hauteurs de la Martinique, Marie-Claire cueille personnellement chaque ananas Victoria à maturité parfaite. Ce fruit d'exception macère lentement dans notre rhum agricole AOC, révélant des arômes tropicaux intenses et une douceur naturelle incomparable. Un voyage sensoriel au cœur des Antilles.",
+        storyEn: "In the heights of Martinique, Marie-Claire personally selects each Victoria pineapple at perfect ripeness. This exceptional fruit slowly macerates in our AOC agricultural rum, revealing intense tropical aromas and incomparable natural sweetness. A sensory journey to the heart of the Caribbean.",
+        storyCreole: "An wo mòn Matinik, Marie-Claire ka chwazi chak zannanna Victoria lè y bien mi. Fwi sa ka repozé dousman nan wonm nòt AOC, épi i ka bay yon sant twopik ki cho é yon dousè ki pa gen paréy. Sé yon vwayaj pou tout sans ou, an kè Antiy.",
+        images: ["https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=600&h=600&fit=crop"],
+        origin: "Fort-de-France, Martinique",
+        inStock: true,
+        certifiedLocal: true
+      });
+
+      await storage.createProduitLocal({
+        artisanId: artisan1.id,
+        name: "Rhum Arrangé Passion Gingembre",
+        price: 26.50,
+        description: "Fruit de la passion frais et gingembre confit dans rhum agricole vieux. Notes épicées et exotiques. Macération 4 mois.",
+        storyFr: "Le mariage audacieux entre la passion acidulée de nos jardins et le gingembre épicé crée une symphonie de saveurs. Marie-Claire révèle ici son expertise: chaque ingrédient est minutieusement sélectionné pour atteindre l'équilibre parfait entre douceur et caractère.",
+        storyEn: "The bold marriage between tangy passion fruit from our gardens and spicy ginger creates a symphony of flavors. Marie-Claire showcases her expertise: each ingredient is meticulously selected to achieve the perfect balance between sweetness and character.",
+        images: ["https://images.unsplash.com/photo-1551538827-9c037cb4f32a?w=600&h=600&fit=crop"],
+        origin: "Le Morne-Rouge, Martinique",
+        inStock: true,
+        certifiedLocal: true
+      });
+
+      await storage.createProduitLocal({
+        artisanId: artisan2.id,
+        name: "Tablette Cacao Pur 75% Guadeloupe",
+        price: 12.90,
+        description: "Chocolat noir bean-to-bar 75% cacao. Fèves de cacao cultivées en Basse-Terre, torréfiées et transformées artisanalement.",
+        storyFr: "Du cacaoyer à votre palais, chaque fève raconte l'histoire des plantations ombragées de Basse-Terre. Jean-Baptiste maîtrise chaque étape: fermentation, séchage, torréfaction, conchage. Le résultat? Un chocolat aux notes florales et fruitées, révélant toute la noblesse du terroir guadeloupéen.",
+        storyEn: "From cacao tree to your palate, each bean tells the story of Basse-Terre's shaded plantations. Jean-Baptiste masters every step: fermentation, drying, roasting, conching. The result? A chocolate with floral and fruity notes, revealing all the nobility of Guadeloupean terroir.",
+        images: ["https://images.unsplash.com/photo-1511381939415-e44015466834?w=600&h=600&fit=crop"],
+        origin: "Basse-Terre, Guadeloupe",
+        inStock: true,
+        certifiedLocal: true
+      });
+
+      await storage.createProduitLocal({
+        artisanId: artisan2.id,
+        name: "Bonbons Chocolat Rhum Vieux",
+        price: 18.50,
+        description: "Assortiment de 12 bonbons fins au chocolat noir 65% et ganache au rhum agricole vieux. Édition limitée.",
+        storyFr: "L'alliance sublime entre le chocolat antillais et le rhum vieux crée une expérience gustative inoubliable. Chaque bonbon est façonné à la main par Jean-Baptiste, qui insuffle 40 ans de tradition familiale dans chaque création. Une gourmandise d'exception pour célébrer la richesse de notre patrimoine.",
+        storyEn: "The sublime alliance between Caribbean chocolate and aged rum creates an unforgettable tasting experience. Each bonbon is hand-crafted by Jean-Baptiste, who infuses 40 years of family tradition into every creation. An exceptional delicacy to celebrate the richness of our heritage.",
+        images: ["https://images.unsplash.com/photo-1548907040-4baa42d10919?w=600&h=600&fit=crop"],
+        origin: "Pointe-à-Pitre, Guadeloupe",
+        inStock: true,
+        certifiedLocal: true
+      });
+
+      await storage.createProduitLocal({
+        artisanId: artisan3.id,
+        name: "Sac Cabas Madras Authentique",
+        price: 45.00,
+        description: "Cabas artisanal en tissu madras traditionnel. Intérieur doublé, anses renforcées. Pièce unique tissée main.",
+        storyFr: "Chaque fil de ce cabas raconte l'histoire des tisserandes caribéennes. Evelyne perpétue un savoir-faire ancestral, sélectionnant les motifs madras les plus vibrants et les assemblant avec une précision millimétrique. Porter ce sac, c'est célébrer la créativité et l'élégance de notre culture créole.",
+        storyEn: "Every thread of this tote tells the story of Caribbean weavers. Evelyne perpetuates ancestral know-how, selecting the most vibrant madras patterns and assembling them with millimetric precision. Carrying this bag celebrates the creativity and elegance of our Creole culture.",
+        images: ["https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=600&h=600&fit=crop"],
+        origin: "Castries, Sainte-Lucie",
+        inStock: true,
+        certifiedLocal: true
+      });
+
+      await storage.createProduitLocal({
+        artisanId: artisan3.id,
+        name: "Bracelet Coquillage & Coton",
+        price: 15.00,
+        description: "Bracelet tissé main avec coquillages naturels des plages de Sainte-Lucie et fils de coton bio. Ajustable.",
+        storyFr: "Inspiré par les trésors de nos plages, ce bracelet marie la délicatesse du tissu et la beauté brute des coquillages. Evelyne ramasse elle-même chaque coquillage lors de ses promenades matinales, créant ainsi des bijoux uniques qui portent l'âme de la mer des Caraïbes.",
+        storyEn: "Inspired by the treasures of our beaches, this bracelet combines the delicacy of fabric and the raw beauty of seashells. Evelyne personally collects each shell during her morning walks, creating unique jewelry that carries the soul of the Caribbean Sea.",
+        images: ["https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=600&h=600&fit=crop"],
+        origin: "Vieux Fort, Sainte-Lucie",
+        inStock: true,
+        certifiedLocal: true
+      });
+
+      console.log("✓ Successfully seeded artisan and product data");
+    } catch (error) {
+      console.error("Error seeding artisan data:", error);
+    }
+  }
+
+  // Initialize seed data on startup
+  await seedLocalProducts();
 
   const httpServer = createServer(app);
   return httpServer;

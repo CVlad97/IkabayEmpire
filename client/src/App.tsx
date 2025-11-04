@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Home from "@/pages/Home";
 import Admin from "@/pages/Admin";
 import Landing from "@/pages/Landing";
+import ProduitsLocaux from "@/pages/ProduitsLocaux";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -26,6 +27,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/produits-locaux" component={ProduitsLocaux} />
       <Route path="/admin" component={Admin} />
       <Route component={NotFound} />
     </Switch>

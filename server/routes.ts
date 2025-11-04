@@ -426,6 +426,118 @@ Focus sur les opportunités de croissance et recommandations stratégiques.`
     }
   });
 
+  // ========================================
+  // IKABAY CONNECT v1.2 - WhatsApp + Voice AI
+  // ========================================
+
+  // WhatsApp Webhook - Receive incoming messages
+  app.post("/api/whatsapp/webhook", async (req, res) => {
+    try {
+      // Validate Twilio signature for security
+      const twilioSignature = req.headers['x-twilio-signature'] as string;
+      
+      // Always validate signature in production, reject if missing or invalid
+      if (process.env.NODE_ENV === 'production') {
+        if (!twilioSignature) {
+          console.warn("Missing Twilio signature");
+          return res.status(403).send("Forbidden - Missing signature");
+        }
+        
+        const { validateTwilioSignature } = await import('./twilio');
+        // Construct full URL including protocol and host
+        const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+        const host = req.get('host');
+        const url = `${protocol}://${host}${req.originalUrl}`;
+        
+        const isValid = await validateTwilioSignature(twilioSignature, url, req.body);
+        if (!isValid) {
+          console.warn("Invalid Twilio signature for URL:", url);
+          return res.status(403).send("Forbidden - Invalid signature");
+        }
+      }
+      
+      const { From, Body, MediaUrl0, MediaContentType0, MessageSid } = req.body;
+      
+      // Extract phone number (remove "whatsapp:" prefix)
+      const phone = From?.replace('whatsapp:', '') || '';
+      
+      if (!phone) {
+        return res.status(400).send("Missing phone number");
+      }
+
+      // Accept both text and audio-only messages
+      const messageText = Body || '';
+      const hasMedia = !!MediaUrl0;
+      const mediaType = MediaContentType0 || '';
+      const isAudio = mediaType.startsWith('audio/');
+
+      console.log(`WhatsApp message from ${phone}: ${messageText || '[Audio message]'}`);
+      
+      // Get or create WhatsApp session
+      let session = await storage.getWhatsAppSession(phone);
+      if (!session) {
+        session = await storage.createWhatsAppSession({
+          phone,
+          userId: null,
+          lastIntent: null,
+          context: {},
+        });
+      } else {
+        // Update last message timestamp
+        session = await storage.updateWhatsAppSession(phone, {});
+      }
+
+      // Store media metadata if present
+      if (hasMedia) {
+        // Update session context with media info
+        const currentContext = session.context || {};
+        await storage.updateWhatsAppSession(phone, {
+          context: {
+            ...(typeof currentContext === 'object' ? currentContext : {}),
+            lastMediaUrl: MediaUrl0,
+            lastMediaType: mediaType,
+            lastMessageSid: MessageSid,
+          }
+        });
+      }
+
+      // For now, send a simple acknowledgment
+      // TODO: Implement AI intent recognition (Task 4) and voice processing (Task 3)
+      const { sendWhatsAppMessage } = await import('./twilio');
+      
+      let responseMessage = '';
+      if (isAudio) {
+        responseMessage = "Bienvenue sur IKABAY CONNECT!\n\nVotre message vocal a ete recu. Notre systeme IA va analyser votre demande.\n\nFonctionnalites disponibles:\n- Nouvelle livraison\n- Valider livraison\n- Demander statut\n- Devenir relais\n- Voir solde IKB";
+      } else {
+        responseMessage = "Bienvenue sur IKABAY CONNECT!\n\nVotre message a ete recu. Notre systeme IA va analyser votre demande.\n\nFonctionnalites disponibles:\n- Nouvelle livraison\n- Valider livraison\n- Demander statut\n- Devenir relais\n- Voir solde IKB";
+      }
+      
+      await sendWhatsAppMessage(phone, responseMessage);
+
+      // Log the interaction
+      await storage.createVoiceLog({
+        userId: session.userId,
+        phone,
+        message: messageText || '[Audio message]',
+        intent: 'unknown',
+        response: 'Acknowledgment sent',
+        audioUrl: hasMedia ? MediaUrl0 : null,
+        processingTime: 0,
+      });
+
+      res.status(200).send("OK");
+    } catch (error) {
+      console.error("WhatsApp webhook error:", error);
+      res.status(500).send("Internal server error");
+    }
+  });
+
+  // WhatsApp Status Callback (optional)
+  app.post("/api/whatsapp/status", async (req, res) => {
+    console.log("WhatsApp status update:", req.body);
+    res.status(200).send("OK");
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -14,9 +14,11 @@ import {
   type Artisan, type InsertArtisan,
   type ProduitLocal, type InsertProduitLocal,
   type LegalSignature, type InsertLegalSignature,
+  type PartnerReview, type InsertPartnerReview,
+  type ZoneSuggestion, type InsertZoneSuggestion,
   products, foodItems, wallets, transactions, userActivity, users,
   partners, missions, relays, whatsappSessions, voiceLogs, rewardsHistory,
-  artisans, produitsLocaux, legalSignatures
+  artisans, produitsLocaux, legalSignatures, partnerReviews, zoneSuggestions
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
@@ -111,6 +113,24 @@ export interface IStorage {
   getLegalSignaturesByStatus(status: string): Promise<LegalSignature[]>;
   createLegalSignature(signature: InsertLegalSignature): Promise<LegalSignature>;
   updateLegalSignature(id: string, updates: Partial<LegalSignature>): Promise<LegalSignature>;
+  
+  // Partner Reviews (IKABAY EMPIRE v2.4 - Trust & Flow)
+  getPartnerReview(id: string): Promise<PartnerReview | undefined>;
+  getPartnerReviews(): Promise<PartnerReview[]>;
+  getReviewsByPartner(partnerId: string): Promise<PartnerReview[]>;
+  getReviewsByCustomer(customerId: string): Promise<PartnerReview[]>;
+  getVerifiedReviews(): Promise<PartnerReview[]>;
+  createPartnerReview(review: InsertPartnerReview): Promise<PartnerReview>;
+  updatePartnerReview(id: string, updates: Partial<PartnerReview>): Promise<PartnerReview>;
+  
+  // Zone Suggestions (IKABAY EMPIRE v2.4 - AI Optimizer)
+  getZoneSuggestion(id: string): Promise<ZoneSuggestion | undefined>;
+  getZoneSuggestions(): Promise<ZoneSuggestion[]>;
+  getZoneSuggestionsByZone(zone: string): Promise<ZoneSuggestion[]>;
+  getZoneSuggestionsByStatus(status: string): Promise<ZoneSuggestion[]>;
+  getTopPrioritySuggestions(limit: number): Promise<ZoneSuggestion[]>;
+  createZoneSuggestion(suggestion: InsertZoneSuggestion): Promise<ZoneSuggestion>;
+  updateZoneSuggestion(id: string, updates: Partial<ZoneSuggestion>): Promise<ZoneSuggestion>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -503,6 +523,99 @@ export class DatabaseStorage implements IStorage {
     
     if (!result[0]) {
       throw new Error("Legal signature not found");
+    }
+    return result[0];
+  }
+
+  // Partner Reviews (IKABAY EMPIRE v2.4 - Trust & Flow)
+  async getPartnerReview(id: string): Promise<PartnerReview | undefined> {
+    const result = await db.select().from(partnerReviews).where(eq(partnerReviews.id, id));
+    return result[0];
+  }
+
+  async getPartnerReviews(): Promise<PartnerReview[]> {
+    return await db.select().from(partnerReviews).orderBy(desc(partnerReviews.createdAt));
+  }
+
+  async getReviewsByPartner(partnerId: string): Promise<PartnerReview[]> {
+    return await db.select().from(partnerReviews)
+      .where(eq(partnerReviews.partnerId, partnerId))
+      .orderBy(desc(partnerReviews.createdAt));
+  }
+
+  async getReviewsByCustomer(customerId: string): Promise<PartnerReview[]> {
+    return await db.select().from(partnerReviews)
+      .where(eq(partnerReviews.customerId, customerId))
+      .orderBy(desc(partnerReviews.createdAt));
+  }
+
+  async getVerifiedReviews(): Promise<PartnerReview[]> {
+    return await db.select().from(partnerReviews)
+      .where(eq(partnerReviews.verified, true))
+      .orderBy(desc(partnerReviews.createdAt));
+  }
+
+  async createPartnerReview(insertReview: InsertPartnerReview): Promise<PartnerReview> {
+    const result = await db.insert(partnerReviews).values(insertReview).returning();
+    return result[0];
+  }
+
+  async updatePartnerReview(id: string, updates: Partial<PartnerReview>): Promise<PartnerReview> {
+    const result = await db
+      .update(partnerReviews)
+      .set(updates)
+      .where(eq(partnerReviews.id, id))
+      .returning();
+    
+    if (!result[0]) {
+      throw new Error("Partner review not found");
+    }
+    return result[0];
+  }
+
+  // Zone Suggestions (IKABAY EMPIRE v2.4 - AI Optimizer)
+  async getZoneSuggestion(id: string): Promise<ZoneSuggestion | undefined> {
+    const result = await db.select().from(zoneSuggestions).where(eq(zoneSuggestions.id, id));
+    return result[0];
+  }
+
+  async getZoneSuggestions(): Promise<ZoneSuggestion[]> {
+    return await db.select().from(zoneSuggestions).orderBy(desc(zoneSuggestions.priorityScore));
+  }
+
+  async getZoneSuggestionsByZone(zone: string): Promise<ZoneSuggestion[]> {
+    return await db.select().from(zoneSuggestions)
+      .where(eq(zoneSuggestions.zone, zone))
+      .orderBy(desc(zoneSuggestions.priorityScore));
+  }
+
+  async getZoneSuggestionsByStatus(status: string): Promise<ZoneSuggestion[]> {
+    return await db.select().from(zoneSuggestions)
+      .where(eq(zoneSuggestions.status, status))
+      .orderBy(desc(zoneSuggestions.priorityScore));
+  }
+
+  async getTopPrioritySuggestions(limit: number): Promise<ZoneSuggestion[]> {
+    return await db.select().from(zoneSuggestions)
+      .where(eq(zoneSuggestions.status, 'pending'))
+      .orderBy(desc(zoneSuggestions.priorityScore))
+      .limit(limit);
+  }
+
+  async createZoneSuggestion(insertSuggestion: InsertZoneSuggestion): Promise<ZoneSuggestion> {
+    const result = await db.insert(zoneSuggestions).values(insertSuggestion).returning();
+    return result[0];
+  }
+
+  async updateZoneSuggestion(id: string, updates: Partial<ZoneSuggestion>): Promise<ZoneSuggestion> {
+    const result = await db
+      .update(zoneSuggestions)
+      .set(updates)
+      .where(eq(zoneSuggestions.id, id))
+      .returning();
+    
+    if (!result[0]) {
+      throw new Error("Zone suggestion not found");
     }
     return result[0];
   }

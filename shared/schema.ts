@@ -405,3 +405,89 @@ export const insertLegalSignatureSchema = createInsertSchema(legalSignatures).om
 
 export type InsertLegalSignature = z.infer<typeof insertLegalSignatureSchema>;
 export type LegalSignature = typeof legalSignatures.$inferSelect;
+
+// ========================================
+// IKABAY EMPIRE v2.4 - TRUST & FLOW ENGINE
+// ========================================
+
+// Partner reviews (AI-verified feedback on delivery/relay partners)
+export const partnerReviews = pgTable("partner_reviews", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  partnerId: text("partner_id").notNull(),
+  customerId: text("customer_id").notNull(),
+  missionId: text("mission_id"),
+  // 3 criteria scoring (1-5 scale)
+  costScore: integer("cost_score").notNull(), // Prix acceptable
+  qualityScore: integer("quality_score").notNull(), // Qualité service
+  serviceScore: integer("service_score").notNull(), // Rapidité et professionnalisme
+  // Aggregate
+  overallScore: real("overall_score").notNull(), // Average of 3 criteria
+  comment: text("comment"),
+  aiVerified: boolean("ai_verified").notNull().default(false), // AI checked for authenticity
+  aiConfidence: real("ai_confidence"), // 0-1 AI verification confidence
+  aiFakeDetection: text("ai_fake_detection"), // AI notes on potential fake review
+  verified: boolean("verified").notNull().default(false), // Final verified status
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertPartnerReviewSchema = createInsertSchema(partnerReviews).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertPartnerReview = z.infer<typeof insertPartnerReviewSchema>;
+export type PartnerReview = typeof partnerReviews.$inferSelect;
+
+// Zone suggestions (AI-generated recommendations for relay/delivery coverage gaps)
+export const zoneSuggestions = pgTable("zone_suggestions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  zone: text("zone").notNull(), // 'Martinique', 'Guadeloupe', etc.
+  suggestedType: text("suggested_type").notNull(), // 'relay', 'delivery_driver', 'food_partner'
+  coords: jsonb("coords").notNull(), // {lat, lng} suggested location
+  address: text("address"),
+  // AI analysis data
+  orderDensity: integer("order_density").notNull(), // Orders per week in area
+  populationDensity: integer("population_density"), // People per km²
+  currentCoverage: real("current_coverage").notNull(), // 0-1 scale (0 = no coverage, 1 = full coverage)
+  estimatedDemand: real("estimated_demand").notNull(), // Projected weekly deliveries
+  priorityScore: real("priority_score").notNull(), // 0-100 AI-calculated priority
+  // Gemini AI reasoning
+  aiReasoning: text("ai_reasoning").notNull(), // AI explanation for suggestion
+  confidenceLevel: real("confidence_level").notNull(), // 0-1 AI confidence
+  status: text("status").notNull().default('pending'), // 'pending', 'accepted', 'rejected', 'completed'
+  createdAt: timestamp("created_at").defaultNow(),
+  resolvedAt: timestamp("resolved_at"),
+});
+
+export const insertZoneSuggestionSchema = createInsertSchema(zoneSuggestions).omit({
+  id: true,
+  createdAt: true,
+  resolvedAt: true,
+});
+
+export type InsertZoneSuggestion = z.infer<typeof insertZoneSuggestionSchema>;
+export type ZoneSuggestion = typeof zoneSuggestions.$inferSelect;
+
+// Route data for optimized delivery paths
+export type RouteData = {
+  distance: number; // km
+  duration: number; // minutes
+  geometry: any; // GeoJSON from OpenRouteService
+  waypoints: {lat: number; lng: number}[];
+};
+
+// Relay with partner info (for frontend display)
+export type RelayWithPartner = Relay & {
+  operatorName?: string;
+  operatorPhone?: string;
+  operatorRating?: number;
+};
+
+// Mission with full details (for frontend display)
+export type MissionWithDetails = Mission & {
+  partnerName?: string;
+  partnerPhone?: string;
+  partnerRating?: number;
+  customerName?: string;
+  routeData?: RouteData;
+};

@@ -190,6 +190,8 @@ Utilise des prix réalistes basés sur le type de produit. Pour les produits tec
     shippingCost: number;
     importFees: number;
     relayFees: number;
+    subtotal: number;
+    margin: number;
     totalCost: number;
     finalPrice: number;
     breakdown: string;
@@ -199,16 +201,20 @@ Utilise des prix réalistes basés sur le type de produit. Pour les produits tec
     const shippingCost = config.baseShipping;
     const importFees = basePrice * config.importDuty;
     const relayFees = config.relayFee;
-    const totalCost = basePrice + shippingCost + importFees + relayFees;
-    const finalPrice = totalCost * (1 + targetMargin);
+    const subtotal = basePrice + shippingCost + importFees + relayFees;
+    const margin = subtotal * targetMargin;
+    const totalCost = subtotal;
+    const finalPrice = subtotal + margin;
 
-    const breakdown = `Prix de base: ${basePrice.toFixed(2)}€ + Livraison: ${shippingCost.toFixed(2)}€ + Droits import: ${importFees.toFixed(2)}€ + Frais relay: ${relayFees.toFixed(2)}€ = ${finalPrice.toFixed(2)}€`;
+    const breakdown = `Prix de base: ${basePrice.toFixed(2)}€ + Livraison: ${shippingCost.toFixed(2)}€ + Droits import: ${importFees.toFixed(2)}€ + Frais relay: ${relayFees.toFixed(2)}€ + Marge: ${margin.toFixed(2)}€ = ${finalPrice.toFixed(2)}€`;
 
     return {
       basePrice: parseFloat(basePrice.toFixed(2)),
       shippingCost: parseFloat(shippingCost.toFixed(2)),
       importFees: parseFloat(importFees.toFixed(2)),
       relayFees: parseFloat(relayFees.toFixed(2)),
+      subtotal: parseFloat(subtotal.toFixed(2)),
+      margin: parseFloat(margin.toFixed(2)),
       totalCost: parseFloat(totalCost.toFixed(2)),
       finalPrice: parseFloat(finalPrice.toFixed(2)),
       breakdown,

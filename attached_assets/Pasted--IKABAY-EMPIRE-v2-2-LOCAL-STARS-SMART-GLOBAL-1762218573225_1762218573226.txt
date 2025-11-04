@@ -1,0 +1,71 @@
+##############################################
+# 🌴 IKABAY EMPIRE v2.2 - LOCAL STARS + SMART GLOBAL LOGISTICS
+# Auteur : Vladimir CLAVEAU
+# Objectif : Créer un écosystème caribéen hybride local/import
+# combinant storytelling, sourcing intelligent, logistique fluide et prix IA optimisés
+##############################################
+
+🎯 Missions prioritaires :
+1️⃣ Créer /produits-locaux : fiches artisans + storytelling + galerie
+2️⃣ Ajouter /partenaire-inscription (livreurs, relais, fournisseurs)
+3️⃣ Générer API /api/legal/consent + CGV + signature numérique
+4️⃣ Connecter AutoDS + Zendrop (import + suivi)
+5️⃣ Créer module “Prix Tout Inclus” (produit + import + livraison)
+6️⃣ Ajouter IA Veille Concurrents (scraper prix & scoring)
+7️⃣ Créer /missions & /relay UI (logistique mutualisée)
+8️⃣ Ajouter animations Lottie + design caraïbe moderne
+9️⃣ Connecter crypto stable IKB-USDC (paiement testnet)
+🔟 Publier version hybride MVP sur domaine public
+
+##############################################
+## 🧾 PRODUITS LOCAUX STARS
+##############################################
+- Table artisans : id, nom, bio, image, zone, produits
+- Table produits_locaux : id, nom, prix, origine, description, images, video_url
+- IA storytelling (OpenAI GPT-5) : description émotionnelle multilingue
+- Badge : “Made in Caribbean – Artisan certifié”
+- Section “L’histoire du produit” sur la fiche
+
+##############################################
+## 🚚 IMPORT INTELLIGENT & PRIX TOUT INCLUS
+##############################################
+- AutoDS API → récupération catalogue
+- Zendrop API → suivi stock + délais
+- Module AI : calcule prix final (produit + frais + TVA + livraison)
+- Option : Livraison Express / Point Relais / Relais → Domicile
+- Veille concurrentielle : scraping Amazon, Temu, Shein, AliExpress
+- Score qualité/prix : (note produit × volume) ÷ prix
+- Sélection auto du “Top Deal du Jour”
+
+##############################################
+## ⚖️ LÉGALITÉ & PARTENAIRES
+##############################################
+- Formulaire universel partenaires
+  (livreur, relais, fournisseur)
+- Consentement CGV + transfert responsabilité
+- Signature numérique (horodatage IP)
+- Table legal_signatures + webhook WhatsApp
+- Stockage Supabase : documents & pièces légales
+
+##############################################
+## 🎨 DESIGN & OPTIMISATION
+##############################################
+- Animations SVG/Lottie légères (carte Caraïbe, flux logistique)
+- Palette : orange #FF914D, vert #2ECC71, bleu lagon #007B8A
+- Mode data-light mobile
+- Composants Framer Motion (fade + slide)
+- Images artisans préchargées / lazyload
+
+##############################################
+## 🤖 AI & INTÉGRATIONS
+##############################################
+- OpenAI GPT-5 (storytelling)
+- Gemini AI (veille concurrentielle)
+- AutoDS API (sourcing)
+- Zendrop API (logistique)
+- Twilio WhatsApp (notification partenaires)
+- Solana SDK (paiement stablecoin)
+- Supabase / PostgreSQL (stockage)
+- Recharts (dashboard artisan/produit)
+
+echo "✅ IKABAY EMPIRE v2.2 - LOCAL STARS & SMART LOGISTICS déployé avec succès 🌎🚀"

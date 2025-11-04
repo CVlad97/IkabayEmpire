@@ -5,6 +5,34 @@ import { openai } from "./lib/openai-client";
 import { ai } from "./lib/gemini-client";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { dropshippingService } from "./lib/dropshipping/dropshipping-service";
+import { aiPricingService } from "./lib/ai-pricing-service";
+import rateLimit from "express-rate-limit";
+
+// Rate limiters for API protection
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: "Trop de requêtes depuis cette IP, veuillez réessayer plus tard.",
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const dropshippingSearchLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // Limit to 10 searches per minute
+  message: "Trop de recherches. Attendez 1 minute avant de réessayer.",
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit login/registration attempts
+  message: "Trop de tentatives. Veuillez réessayer dans 15 minutes.",
+  skipSuccessfulRequests: true,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Cache for daily story
 let dailyStoryCache: { text: string; generatedAt: string } | null = null;
@@ -184,7 +212,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Partner Registration - Public route (authenticated)
-  app.post("/api/partners/register", isAuthenticated, async (req: any, res) => {
+  app.post("/api/partners/register", isAuthenticated, authLimiter, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
@@ -1379,7 +1407,7 @@ Reponds en JSON avec ce format:
   });
 
   // Search products from dropshipping supplier
-  app.get("/api/dropshipping/search", isAuthenticated, async (req, res) => {
+  app.get("/api/dropshipping/search", isAuthenticated, dropshippingSearchLimiter, async (req, res) => {
     try {
       const { source, keyword, category, pageNum, pageSize } = req.query;
 
@@ -1403,7 +1431,7 @@ Reponds en JSON avec ce format:
   });
 
   // Import product from dropshipping supplier
-  app.post("/api/dropshipping/import", isAuthenticated, async (req, res) => {
+  app.post("/api/dropshipping/import", isAuthenticated, apiLimiter, async (req, res) => {
     try {
       const { source, externalId } = req.body;
 
@@ -1467,6 +1495,87 @@ Reponds en JSON avec ce format:
       res.json(logs);
     } catch (error: any) {
       console.error("Error fetching sync logs:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // ============ AI PRICING ENGINE (v2.4 Auto-Pricing) ============
+
+  // Analyze competitor prices with Gemini AI
+  app.post("/api/pricing/analyze", isAuthenticated, apiLimiter, async (req, res) => {
+    try {
+      const { productName, category } = req.body;
+
+      // Validate product name
+      if (!productName || typeof productName !== "string" || productName.trim().length === 0) {
+        return res.status(400).json({ message: "Product name is required and must be non-empty" });
+      }
+
+      // Validate category (optional)
+      if (category !== undefined && (typeof category !== "string" || category.trim().length === 0)) {
+        return res.status(400).json({ message: "Category must be a non-empty string if provided" });
+      }
+
+      const analysis = await aiPricingService.analyzeCompetitorPrices(
+        productName.trim(),
+        category?.trim()
+      );
+
+      res.json(analysis);
+    } catch (error: any) {
+      console.error("Error analyzing prices:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Calculate all-inclusive price for a region
+  app.post("/api/pricing/calculate", isAuthenticated, async (req, res) => {
+    try {
+      const { basePrice, region, targetMargin } = req.body;
+
+      // Validate base price
+      if (!basePrice || typeof basePrice !== "number" || basePrice <= 0) {
+        return res.status(400).json({ message: "Base price must be a positive number" });
+      }
+
+      // Validate region
+      const validRegions = ["martinique", "guadeloupe", "guyane", "reunion", "mayotte"];
+      const selectedRegion = region || "martinique";
+      
+      if (!validRegions.includes(selectedRegion.toLowerCase())) {
+        return res.status(400).json({ 
+          message: `Invalid region. Must be one of: ${validRegions.join(", ")}` 
+        });
+      }
+
+      // Validate target margin (optional)
+      if (targetMargin !== undefined && (typeof targetMargin !== "number" || targetMargin < 0 || targetMargin > 1)) {
+        return res.status(400).json({ 
+          message: "Target margin must be a number between 0 and 1" 
+        });
+      }
+
+      const calculation = aiPricingService.calculateAllInclusivePrice(
+        basePrice,
+        selectedRegion.toLowerCase() as "martinique" | "guadeloupe" | "guyane" | "reunion" | "mayotte",
+        targetMargin
+      );
+
+      res.json(calculation);
+    } catch (error: any) {
+      console.error("Error calculating price:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Detect if a product is a good deal
+  app.get("/api/pricing/detect-deal/:productId", async (req, res) => {
+    try {
+      const { productId } = req.params;
+      const dealAnalysis = await aiPricingService.detectDeal(productId);
+      res.json(dealAnalysis);
+    } catch (error: any) {
+      console.error("Error detecting deal:", error);
       res.status(500).json({ message: error.message });
     }
   });

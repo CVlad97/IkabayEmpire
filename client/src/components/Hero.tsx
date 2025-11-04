@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { MapPin, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import caribbeanMarketImg from "@assets/stock_images/caribbean_marketplac_97e8d2f1.jpg";
 
 export default function Hero() {
   const { data: story, isLoading: storyLoading } = useQuery<{ text: string; generatedAt: string }>({
@@ -19,14 +20,30 @@ export default function Hero() {
 
   return (
     <div className="relative w-full h-[80vh] md:h-[85vh] overflow-hidden">
+      <svg className="absolute bottom-0 w-full h-32 md:h-48 z-10 pointer-events-none" viewBox="0 0 1440 320" preserveAspectRatio="none">
+        <motion.path
+          initial={{ d: "M0,160L48,176C96,192,192,224,288,213.3C384,203,480,149,576,154.7C672,160,768,224,864,229.3C960,235,1056,181,1152,165.3C1248,149,1344,171,1392,181.3L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z" }}
+          animate={{
+            d: [
+              "M0,160L48,176C96,192,192,224,288,213.3C384,203,480,149,576,154.7C672,160,768,224,864,229.3C960,235,1056,181,1152,165.3C1248,149,1344,171,1392,181.3L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z",
+              "M0,192L48,197.3C96,203,192,213,288,192C384,171,480,117,576,117.3C672,117,768,171,864,181.3C960,192,1056,160,1152,154.7C1248,149,1344,171,1392,181.3L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z",
+              "M0,160L48,176C96,192,192,224,288,213.3C384,203,480,149,576,154.7C672,160,768,224,864,229.3C960,235,1056,181,1152,165.3C1248,149,1344,171,1392,181.3L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
+            ]
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          fill="hsl(var(--background))"
+          opacity="0.95"
+        />
+      </svg>
+      
       <div 
         className="absolute inset-0 bg-cover bg-center"
         style={{
-          backgroundImage: `url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=2940&auto=format&fit=crop')`,
+          backgroundImage: `url(${caribbeanMarketImg})`,
         }}
       />
       
-      <div className="absolute inset-0 bg-gradient-to-t from-ikabay-dark/80 via-ikabay-dark/40 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-ikabay-dark/85 via-ikabay-dark/50 to-ikabay-dark/20" />
       
       <div className="relative h-full flex flex-col items-center justify-center px-4 text-center max-w-5xl mx-auto">
         {locationLoading ? (

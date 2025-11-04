@@ -10,6 +10,7 @@ import Landing from "@/pages/Landing";
 import ProduitsLocaux from "@/pages/ProduitsLocaux";
 import RelayMap from "@/pages/RelayMap";
 import PartnerRegistration from "@/pages/PartnerRegistration";
+import DropshippingAdmin from "@/pages/DropshippingAdmin";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -33,6 +34,7 @@ function Router() {
       <Route path="/relay-map" component={RelayMap} />
       <Route path="/partner-registration" component={PartnerRegistration} />
       <Route path="/admin" component={Admin} />
+      <Route path="/dropshipping" component={DropshippingAdmin} />
       <Route component={NotFound} />
     </Switch>
   );

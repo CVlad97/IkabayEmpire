@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { openai } from "./lib/openai-client";
 import { ai } from "./lib/gemini-client";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { dropshippingService } from "./lib/dropshipping/dropshipping-service";
 
 // Cache for daily story
 let dailyStoryCache: { text: string; generatedAt: string } | null = null;
@@ -1277,9 +1278,212 @@ Reponds en JSON avec ce format:
     }
   }
 
+  // ============ DROPSHIPPING API (v2.4 AutoDS/CJ/Zendrop) ============
+  
+  // Initialize dropshipping suppliers
+  app.post("/api/dropshipping/suppliers/init", isAuthenticated, async (req, res) => {
+    try {
+      // Check if suppliers already configured
+      const existing = await storage.getDropshippingSuppliers();
+      if (existing.length > 0) {
+        return res.json({ message: "Suppliers already configured", suppliers: existing });
+      }
+
+      // Create default supplier configurations
+      const cjSupplier = await storage.createDropshippingSupplier({
+        name: "CJ Dropshipping",
+        code: "cj",
+        active: false, // Activate when API keys provided
+        baseUrl: "https://developers.cjdropshipping.com/api2.0/v1",
+      });
+
+      const autodsSupplier = await storage.createDropshippingSupplier({
+        name: "AutoDS",
+        code: "autods",
+        active: false,
+        baseUrl: "https://api.autods.com", // Placeholder - requires approval
+      });
+
+      const zendropSupplier = await storage.createDropshippingSupplier({
+        name: "Zendrop",
+        code: "zendrop",
+        active: false,
+        baseUrl: "https://api.zendrop.com", // Placeholder - no public API
+      });
+
+      res.json({
+        message: "Dropshipping suppliers initialized",
+        suppliers: [cjSupplier, autodsSupplier, zendropSupplier],
+      });
+    } catch (error: any) {
+      console.error("Error initializing suppliers:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get all suppliers
+  app.get("/api/dropshipping/suppliers", isAuthenticated, async (req, res) => {
+    try {
+      const suppliers = await storage.getDropshippingSuppliers();
+      res.json(suppliers);
+    } catch (error: any) {
+      console.error("Error fetching suppliers:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Update supplier configuration (API keys)
+  app.patch("/api/dropshipping/suppliers/:id", isAuthenticated, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { apiKey, apiEmail, active } = req.body;
+
+      // Validate required fields for activation
+      if (active) {
+        const supplier = await storage.getDropshippingSupplier(id);
+        if (!supplier) {
+          return res.status(404).json({ message: "Supplier not found" });
+        }
+
+        // CJ requires both apiKey and apiEmail
+        if (supplier.code === "cj" && (!apiKey || !apiEmail)) {
+          return res.status(400).json({ 
+            message: "CJ Dropshipping requires both API key and email" 
+          });
+        }
+
+        // AutoDS and Zendrop require apiKey (even if stubs)
+        if ((supplier.code === "autods" || supplier.code === "zendrop") && !apiKey) {
+          return res.status(400).json({ 
+            message: `${supplier.name} requires API key to activate` 
+          });
+        }
+      }
+
+      const updated = await storage.updateDropshippingSupplier(id, {
+        apiKey,
+        apiEmail,
+        active,
+      });
+
+      // Reinitialize dropshipping service with new credentials
+      if (active) {
+        await dropshippingService.initializeSuppliers();
+      }
+
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error updating supplier:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Search products from dropshipping supplier
+  app.get("/api/dropshipping/search", isAuthenticated, async (req, res) => {
+    try {
+      const { source, keyword, category, pageNum, pageSize } = req.query;
+
+      if (!source || typeof source !== 'string') {
+        return res.status(400).json({ message: "Source parameter required (cj, autods, or zendrop)" });
+      }
+
+      const results = await dropshippingService.searchProducts({
+        source: source as "cj" | "autods" | "zendrop",
+        keyword: keyword as string,
+        category: category as string,
+        pageNum: pageNum ? parseInt(pageNum as string) : undefined,
+        pageSize: pageSize ? parseInt(pageSize as string) : undefined,
+      });
+
+      res.json(results);
+    } catch (error: any) {
+      console.error("Error searching products:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Import product from dropshipping supplier
+  app.post("/api/dropshipping/import", isAuthenticated, async (req, res) => {
+    try {
+      const { source, externalId } = req.body;
+
+      if (!source || !externalId) {
+        return res.status(400).json({ message: "source and externalId required" });
+      }
+
+      const product = await dropshippingService.importProduct({
+        source,
+        externalId,
+      });
+
+      res.json({
+        message: "Product imported successfully",
+        product,
+      });
+    } catch (error: any) {
+      console.error("Error importing product:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Sync stock for a specific product
+  app.post("/api/dropshipping/sync/:productId", isAuthenticated, async (req, res) => {
+    try {
+      const { productId } = req.params;
+      await dropshippingService.syncProductStock(productId);
+
+      const product = await storage.getProduct(productId);
+      res.json({
+        message: "Product synced successfully",
+        product,
+      });
+    } catch (error: any) {
+      console.error("Error syncing product:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Bulk sync all dropshipping products
+  app.post("/api/dropshipping/sync-all", isAuthenticated, async (req, res) => {
+    try {
+      const results = await dropshippingService.bulkSyncAllProducts();
+      res.json({
+        message: "Bulk sync completed",
+        ...results,
+      });
+    } catch (error: any) {
+      console.error("Error during bulk sync:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get sync logs
+  app.get("/api/dropshipping/logs", isAuthenticated, async (req, res) => {
+    try {
+      const { limit } = req.query;
+      const logs = await storage.getRecentSyncLogs(
+        limit ? parseInt(limit as string) : 50
+      );
+      res.json(logs);
+    } catch (error: any) {
+      console.error("Error fetching sync logs:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Initialize seed data on startup
   await seedLocalProducts();
   await seedRelayPoints();
+
+  // Initialize dropshipping service on startup
+  console.log("🚀 Initializing dropshipping suppliers...");
+  try {
+    await dropshippingService.initializeSuppliers();
+    console.log("✅ Dropshipping service initialized successfully");
+  } catch (err) {
+    console.error("⚠️ Failed to initialize dropshipping service:", err);
+    console.log("⚠️ Dropshipping will remain inactive until suppliers are configured");
+  }
 
   const httpServer = createServer(app);
   return httpServer;

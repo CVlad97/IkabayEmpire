@@ -3,7 +3,7 @@ import Marketplace from "@/components/Marketplace";
 import Delikreol from "@/components/Delikreol";
 import CryptoDashboard from "@/components/CryptoDashboard";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, UtensilsCrossed, Wallet, BarChart3, MapPin, User } from "lucide-react";
+import { ShoppingBag, UtensilsCrossed, Wallet, BarChart3, MapPin, User, Package } from "lucide-react";
 import { Link } from "wouter";
 
 export default function Home() {
@@ -43,6 +43,12 @@ export default function Home() {
               <Button variant="outline" size="lg" className="px-8 font-semibold" data-testid="button-admin">
                 <BarChart3 className="w-4 h-4 mr-2" />
                 Dashboard Admin
+              </Button>
+            </Link>
+            <Link href="/dropshipping">
+              <Button variant="outline" size="lg" className="px-8 font-semibold" data-testid="button-dropshipping">
+                <Package className="w-4 h-4 mr-2" />
+                Dropshipping Manager
               </Button>
             </Link>
           </div>

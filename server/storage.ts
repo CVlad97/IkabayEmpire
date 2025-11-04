@@ -16,9 +16,12 @@ import {
   type LegalSignature, type InsertLegalSignature,
   type PartnerReview, type InsertPartnerReview,
   type ZoneSuggestion, type InsertZoneSuggestion,
+  type DropshippingSupplier, type InsertDropshippingSupplier,
+  type ProductSyncLog, type InsertProductSyncLog,
   products, foodItems, wallets, transactions, userActivity, users,
   partners, missions, relays, whatsappSessions, voiceLogs, rewardsHistory,
-  artisans, produitsLocaux, legalSignatures, partnerReviews, zoneSuggestions
+  artisans, produitsLocaux, legalSignatures, partnerReviews, zoneSuggestions,
+  dropshippingSuppliers, productSyncLogs
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
@@ -131,6 +134,27 @@ export interface IStorage {
   getTopPrioritySuggestions(limit: number): Promise<ZoneSuggestion[]>;
   createZoneSuggestion(suggestion: InsertZoneSuggestion): Promise<ZoneSuggestion>;
   updateZoneSuggestion(id: string, updates: Partial<ZoneSuggestion>): Promise<ZoneSuggestion>;
+  
+  // Dropshipping Suppliers (IKABAY EMPIRE v2.4 - AutoDS/CJ/Zendrop)
+  getDropshippingSupplier(id: string): Promise<DropshippingSupplier | undefined>;
+  getDropshippingSupplierByCode(code: string): Promise<DropshippingSupplier | undefined>;
+  getDropshippingSuppliers(): Promise<DropshippingSupplier[]>;
+  getActiveSuppliers(): Promise<DropshippingSupplier[]>;
+  createDropshippingSupplier(supplier: InsertDropshippingSupplier): Promise<DropshippingSupplier>;
+  updateDropshippingSupplier(id: string, updates: Partial<DropshippingSupplier>): Promise<DropshippingSupplier>;
+  
+  // Product Sync Logs (IKABAY EMPIRE v2.4 - Dropshipping)
+  getProductSyncLog(id: string): Promise<ProductSyncLog | undefined>;
+  getProductSyncLogs(): Promise<ProductSyncLog[]>;
+  getSyncLogsBySupplier(supplierId: string): Promise<ProductSyncLog[]>;
+  getRecentSyncLogs(limit: number): Promise<ProductSyncLog[]>;
+  createProductSyncLog(log: InsertProductSyncLog): Promise<ProductSyncLog>;
+  updateProductSyncLog(id: string, updates: Partial<ProductSyncLog>): Promise<ProductSyncLog>;
+  
+  // Products - Extended for dropshipping
+  getProductsBySource(source: string): Promise<Product[]>;
+  getProductByExternalId(externalId: string, source: string): Promise<Product | undefined>;
+  updateProduct(id: string, updates: Partial<Product>): Promise<Product>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -616,6 +640,108 @@ export class DatabaseStorage implements IStorage {
     
     if (!result[0]) {
       throw new Error("Zone suggestion not found");
+    }
+    return result[0];
+  }
+
+  // Dropshipping Suppliers (IKABAY EMPIRE v2.4 - AutoDS/CJ/Zendrop)
+  async getDropshippingSupplier(id: string): Promise<DropshippingSupplier | undefined> {
+    const result = await db.select().from(dropshippingSuppliers).where(eq(dropshippingSuppliers.id, id));
+    return result[0];
+  }
+
+  async getDropshippingSupplierByCode(code: string): Promise<DropshippingSupplier | undefined> {
+    const result = await db.select().from(dropshippingSuppliers).where(eq(dropshippingSuppliers.code, code));
+    return result[0];
+  }
+
+  async getDropshippingSuppliers(): Promise<DropshippingSupplier[]> {
+    return await db.select().from(dropshippingSuppliers);
+  }
+
+  async getActiveSuppliers(): Promise<DropshippingSupplier[]> {
+    return await db.select().from(dropshippingSuppliers).where(eq(dropshippingSuppliers.active, true));
+  }
+
+  async createDropshippingSupplier(insertSupplier: InsertDropshippingSupplier): Promise<DropshippingSupplier> {
+    const result = await db.insert(dropshippingSuppliers).values(insertSupplier).returning();
+    return result[0];
+  }
+
+  async updateDropshippingSupplier(id: string, updates: Partial<DropshippingSupplier>): Promise<DropshippingSupplier> {
+    const result = await db
+      .update(dropshippingSuppliers)
+      .set(updates)
+      .where(eq(dropshippingSuppliers.id, id))
+      .returning();
+    
+    if (!result[0]) {
+      throw new Error("Dropshipping supplier not found");
+    }
+    return result[0];
+  }
+
+  // Product Sync Logs (IKABAY EMPIRE v2.4 - Dropshipping)
+  async getProductSyncLog(id: string): Promise<ProductSyncLog | undefined> {
+    const result = await db.select().from(productSyncLogs).where(eq(productSyncLogs.id, id));
+    return result[0];
+  }
+
+  async getProductSyncLogs(): Promise<ProductSyncLog[]> {
+    return await db.select().from(productSyncLogs).orderBy(desc(productSyncLogs.createdAt));
+  }
+
+  async getSyncLogsBySupplier(supplierId: string): Promise<ProductSyncLog[]> {
+    return await db.select().from(productSyncLogs)
+      .where(eq(productSyncLogs.supplierId, supplierId))
+      .orderBy(desc(productSyncLogs.createdAt));
+  }
+
+  async getRecentSyncLogs(limit: number): Promise<ProductSyncLog[]> {
+    return await db.select().from(productSyncLogs)
+      .orderBy(desc(productSyncLogs.createdAt))
+      .limit(limit);
+  }
+
+  async createProductSyncLog(insertLog: InsertProductSyncLog): Promise<ProductSyncLog> {
+    const result = await db.insert(productSyncLogs).values(insertLog).returning();
+    return result[0];
+  }
+
+  async updateProductSyncLog(id: string, updates: Partial<ProductSyncLog>): Promise<ProductSyncLog> {
+    const result = await db
+      .update(productSyncLogs)
+      .set(updates)
+      .where(eq(productSyncLogs.id, id))
+      .returning();
+    
+    if (!result[0]) {
+      throw new Error("Product sync log not found");
+    }
+    return result[0];
+  }
+
+  // Products - Extended for dropshipping
+  async getProductsBySource(source: string): Promise<Product[]> {
+    return await db.select().from(products).where(eq(products.source, source));
+  }
+
+  async getProductByExternalId(externalId: string, source: string): Promise<Product | undefined> {
+    const result = await db.select().from(products)
+      .where(eq(products.externalId, externalId));
+    const filtered = result.filter(p => p.source === source);
+    return filtered[0];
+  }
+
+  async updateProduct(id: string, updates: Partial<Product>): Promise<Product> {
+    const result = await db
+      .update(products)
+      .set(updates)
+      .where(eq(products.id, id))
+      .returning();
+    
+    if (!result[0]) {
+      throw new Error("Product not found");
     }
     return result[0];
   }

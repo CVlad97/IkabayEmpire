@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { MapPin, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import caribbeanMarketImg from "@assets/stock_images/caribbean_marketplac_97e8d2f1.jpg";
+import caribbeanMarketImg from "@assets/stock_images/caribbean_marketplac_97e8d2f1.jpg?w=1200&format=webp&quality=80";
 
 export default function Hero() {
   const { data: story, isLoading: storyLoading } = useQuery<{ text: string; generatedAt: string }>({

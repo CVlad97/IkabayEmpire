@@ -95,3 +95,28 @@ export async function validateTwilioSignature(
     return false;
   }
 }
+
+export async function fetchTwilioMedia(mediaUrl: string): Promise<ArrayBuffer> {
+  try {
+    // Get credentials for basic auth
+    const { accountSid, authToken } = await getCredentials();
+    
+    // Twilio media URLs require HTTP basic authentication
+    const authHeader = 'Basic ' + Buffer.from(`${accountSid}:${authToken}`).toString('base64');
+    
+    const response = await fetch(mediaUrl, {
+      headers: {
+        'Authorization': authHeader
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch media: ${response.status} ${response.statusText}`);
+    }
+    
+    return await response.arrayBuffer();
+  } catch (error) {
+    console.error("Error fetching Twilio media:", error);
+    throw error;
+  }
+}

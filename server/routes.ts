@@ -504,7 +504,7 @@ Focus sur les opportunités de croissance et recommandations stratégiques.`
       const { sendWhatsAppMessage } = await import('./twilio');
       
       let finalMessage = messageText;
-      let processingTime = 0;
+      let transcriptionTime = 0;
       
       // If audio message, transcribe it using Whisper
       if (isAudio && MediaUrl0) {
@@ -524,35 +524,94 @@ Focus sur les opportunités de croissance et recommandations stratégiques.`
           });
 
           finalMessage = transcription.text;
-          processingTime = Date.now() - transcribeStart;
+          transcriptionTime = Date.now() - transcribeStart;
           
-          console.log(`Transcribed audio from ${phone} (${processingTime}ms): ${finalMessage}`);
+          console.log(`Transcribed audio from ${phone} (${transcriptionTime}ms): ${finalMessage}`);
         } catch (error) {
           console.error("Error transcribing audio:", error);
           finalMessage = '[Audio transcription failed]';
         }
       }
       
-      // For now, send a simple acknowledgment
-      // TODO: Implement AI intent recognition (Task 4) to generate intelligent responses
-      let responseMessage = '';
-      if (isAudio) {
-        responseMessage = `Bienvenue sur IKABAY CONNECT!\n\nVotre message vocal a ete recu${finalMessage !== '[Audio transcription failed]' ? ' et transcrit' : ''}. Notre systeme IA va analyser votre demande.\n\nFonctionnalites disponibles:\n- Nouvelle livraison\n- Valider livraison\n- Demander statut\n- Devenir relais\n- Voir solde IKB`;
+      // Analyze intent using Gemini AI
+      let detectedIntent = 'unknown';
+      let aiResponse = '';
+      let intentProcessingTime = 0;
+      
+      if (finalMessage && finalMessage !== '[Audio transcription failed]') {
+        try {
+          const intentStart = Date.now();
+          
+          const prompt = `Tu es un assistant IA pour IKABAY CONNECT, un service de livraison caribeen.
+
+Analyse le message suivant et determine l'intention de l'utilisateur parmi ces categories:
+- nouvelle_livraison: L'utilisateur veut creer une nouvelle livraison
+- valider_livraison: L'utilisateur (livreur) veut confirmer qu'une livraison est terminee
+- demande_statut: L'utilisateur demande le statut de sa livraison
+- devenir_relais: L'utilisateur veut devenir un point relais
+- voir_solde: L'utilisateur veut voir son solde IKB
+- unknown: Intention non reconnue
+
+Message: "${finalMessage}"
+
+Reponds en JSON avec ce format:
+{
+  "intent": "l'une des categories ci-dessus",
+  "response": "une reponse appropriee en francais (2-3 phrases maximum)"
+}`;
+
+          const result = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          });
+          
+          const responseText = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          
+          // Parse JSON response from Gemini
+          try {
+            const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+              const intentData = JSON.parse(jsonMatch[0]);
+              detectedIntent = intentData.intent || 'unknown';
+              aiResponse = intentData.response || 'Je peux vous aider avec vos livraisons, statuts, et votre solde IKB.';
+            }
+          } catch (parseError) {
+            console.error("Failed to parse Gemini response:", responseText);
+            aiResponse = 'Bienvenue sur IKABAY CONNECT! Comment puis-je vous aider avec vos livraisons?';
+          }
+          
+          intentProcessingTime = Date.now() - intentStart;
+          console.log(`Detected intent: ${detectedIntent} (${intentProcessingTime}ms)`);
+        } catch (error) {
+          console.error("Intent recognition error:", error);
+          aiResponse = 'Bienvenue sur IKABAY CONNECT! Comment puis-je vous aider?';
+        }
       } else {
-        responseMessage = "Bienvenue sur IKABAY CONNECT!\n\nVotre message a ete recu. Notre systeme IA va analyser votre demande.\n\nFonctionnalites disponibles:\n- Nouvelle livraison\n- Valider livraison\n- Demander statut\n- Devenir relais\n- Voir solde IKB";
+        aiResponse = 'Bienvenue sur IKABAY CONNECT! Comment puis-je vous aider?';
       }
       
-      await sendWhatsAppMessage(phone, responseMessage);
+      // Send AI-generated response
+      await sendWhatsAppMessage(phone, aiResponse);
 
-      // Log the interaction with transcription
+      // Update session with detected intent
+      await storage.updateWhatsAppSession(phone, {
+        lastIntent: detectedIntent,
+        context: {
+          ...(typeof session.context === 'object' ? session.context : {}),
+          lastResponse: aiResponse,
+        }
+      });
+
+      // Log the interaction with transcription and intent
+      const totalProcessingTime = transcriptionTime + intentProcessingTime;
       await storage.createVoiceLog({
         userId: session.userId,
         phone,
         message: finalMessage || messageText || '[Audio message]',
-        intent: 'unknown',
-        response: 'Acknowledgment sent',
+        intent: detectedIntent,
+        response: aiResponse,
         audioUrl: hasMedia ? MediaUrl0 : null,
-        processingTime,
+        processingTime: totalProcessingTime,
       });
 
       res.status(200).send("OK");
@@ -645,6 +704,81 @@ Focus sur les opportunités de croissance et recommandations stratégiques.`
     } catch (error) {
       console.error("TTS error:", error);
       res.status(500).json({ error: "Failed to generate speech" });
+    }
+  });
+
+  // AI Intent Recognition - Analyze user messages and detect intents
+  app.post("/api/ai/intent", async (req, res) => {
+    try {
+      const { message, sessionContext } = req.body;
+      
+      if (!message) {
+        return res.status(400).json({ error: "Missing message" });
+      }
+
+      const startTime = Date.now();
+      
+      // Use Gemini Pro to analyze intent
+      const prompt = `Tu es un assistant IA pour IKABAY CONNECT, un service de livraison caribeen.
+
+Analyse le message suivant et determine l'intention de l'utilisateur parmi ces categories:
+- nouvelle_livraison: L'utilisateur veut creer une nouvelle livraison
+- valider_livraison: L'utilisateur (livreur) veut confirmer qu'une livraison est terminee
+- demande_statut: L'utilisateur demande le statut de sa livraison
+- devenir_relais: L'utilisateur veut devenir un point relais
+- voir_solde: L'utilisateur veut voir son solde IKB
+- unknown: Intention non reconnue
+
+Message: "${message}"
+
+${sessionContext ? `Contexte de la conversation: ${JSON.stringify(sessionContext)}` : ''}
+
+Reponds en JSON avec ce format:
+{
+  "intent": "l'une des categories ci-dessus",
+  "confidence": 0.0-1.0,
+  "response": "une reponse appropriee en francais",
+  "extractedData": {
+    // donnees extraites pertinentes selon l'intent
+  }
+}`;
+
+      const result = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      });
+      
+      const responseText = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      
+      // Parse JSON response from Gemini
+      let intentData;
+      try {
+        // Extract JSON from response (Gemini might wrap it in markdown)
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          intentData = JSON.parse(jsonMatch[0]);
+        } else {
+          throw new Error("No JSON found in response");
+        }
+      } catch (parseError) {
+        console.error("Failed to parse Gemini response:", responseText);
+        intentData = {
+          intent: "unknown",
+          confidence: 0.5,
+          response: "Desolee, je n'ai pas compris votre demande. Pouvez-vous reformuler?",
+          extractedData: {}
+        };
+      }
+
+      const processingTime = Date.now() - startTime;
+
+      res.json({
+        ...intentData,
+        processingTime,
+      });
+    } catch (error) {
+      console.error("Intent recognition error:", error);
+      res.status(500).json({ error: "Failed to recognize intent" });
     }
   });
 

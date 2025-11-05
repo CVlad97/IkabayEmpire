@@ -1580,6 +1580,31 @@ Reponds en JSON avec ce format:
     }
   });
 
+  // AI System Health Status (Auto-Stabilizer)
+  app.get("/api/empire/status", async (req, res) => {
+    try {
+      const { collectSystemMetrics, analyzeSystemHealth, getHealthScore } = await import("./lib/ai-supervisor");
+      
+      const metrics = collectSystemMetrics();
+      const healthScore = getHealthScore(metrics);
+      const aiAnalysis = await analyzeSystemHealth(metrics);
+
+      res.json({
+        status: healthScore >= 70 ? "✅ Empire stabilisé" : "⚠️ Attention requise",
+        healthScore,
+        system: {
+          uptime: `${Math.floor(metrics.uptime / 3600)}h ${Math.floor((metrics.uptime % 3600) / 60)}m`,
+          memoryUsage: `${Math.round((metrics.memory.heapUsed / metrics.memory.heapTotal) * 100)}%`,
+          timestamp: metrics.timestamp,
+        },
+        aiReport: aiAnalysis,
+      });
+    } catch (error: any) {
+      console.error("Error analyzing system health:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Initialize seed data on startup
   await seedLocalProducts();
   await seedRelayPoints();

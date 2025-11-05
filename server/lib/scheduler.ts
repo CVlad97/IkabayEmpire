@@ -2,6 +2,7 @@ import { dropshippingService } from "./dropshipping/dropshipping-service";
 import { storage } from "../storage";
 
 let syncInterval: NodeJS.Timeout | null = null;
+let isRunning = false;
 
 export function startScheduledTasks() {
   const TWELVE_HOURS = 12 * 60 * 60 * 1000;
@@ -41,6 +42,7 @@ export function startScheduledTasks() {
     }
   }, TWELVE_HOURS);
 
+  isRunning = true;
   console.log("✅ Scheduled tasks started (sync every 12h)");
 }
 
@@ -48,6 +50,14 @@ export function stopScheduledTasks() {
   if (syncInterval) {
     clearInterval(syncInterval);
     syncInterval = null;
+    isRunning = false;
     console.log("🛑 Scheduled tasks stopped");
   }
+}
+
+export function getSchedulerStatus() {
+  return {
+    running: isRunning,
+    hasInterval: syncInterval !== null,
+  };
 }

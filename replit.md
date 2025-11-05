@@ -22,10 +22,14 @@ Preferred communication style: Simple, everyday language.
 ### Backend Architecture
 
 **Server Framework**: Express.js with TypeScript on Node.js.
-- **API Structure**: RESTful endpoints covering AI-generated stories, product catalog, food items, user wallets, transactions, purchases, social sharing rewards, crypto mining, geolocation, AI recommendations, admin analytics, AI pricing analysis (Gemini), DOM-TOM price calculation, deal detection, CJ Dropshipping automation, partner registration, and interactive relay maps.
+- **API Structure**: RESTful endpoints covering AI-generated stories, product catalog, food items, user wallets, transactions, purchases, social sharing rewards, crypto mining, geolocation, AI recommendations, admin analytics, AI pricing analysis (Gemini), DOM-TOM price calculation, deal detection, CJ Dropshipping automation, partner registration, interactive relay maps, and **AI System Health Monitoring**.
 - **Data Storage**: PostgreSQL (Neon serverless) via Drizzle ORM for schema definition and migrations. In-memory storage (MemStorage) is used for development and initial setup, with an interface pattern for future database integration.
-- **AI Integration**: OpenAI GPT-5 for daily story generation and Google Gemini Pro for advanced AI features like competitor price analysis and logistics optimization suggestions. Caching minimizes API calls.
+- **AI Integration**: OpenAI GPT-5 for daily story generation and Google Gemini Pro for advanced AI features like competitor price analysis, logistics optimization suggestions, and **real-time system health analysis**. Caching minimizes API calls.
 - **Security**: Helmet.js for HTTP headers, tiered rate limiting on sensitive endpoints, comprehensive input validation using Zod schemas, and PostgreSQL-backed session management.
+- **Automation & Monitoring**: 
+  - **Auto-Stabilizer**: AI-powered system health monitoring (Gemini + GPT-4o-mini) with real-time metrics analysis, health scoring (0-100), and automated recommendations.
+  - **Scheduler**: Auto-sync CJ Dropshipping products every 12 hours with manual override controls.
+  - **Admin Controls**: Dashboard with force sync, scheduler pause/resume, and comprehensive sync logs tracking.
 
 ### Data Schema Design
 
@@ -53,4 +57,12 @@ Preferred communication style: Simple, everyday language.
 - class-variance-authority and clsx for dynamic styling.
 
 **Dropshipping**:
-- CJ Dropshipping API for product import automation.
+- CJ Dropshipping API for product import automation with 12-hour auto-sync scheduler.
+- Product sync logs stored in PostgreSQL for audit trail.
+- Admin dashboard controls for manual sync and scheduler management.
+
+**Admin Dashboard**:
+- Two-tab interface: Analytics (sales, users, IKB distribution) and System Health (AI monitoring).
+- Real-time system metrics: uptime, memory usage, health score.
+- Manual controls for CJ sync and scheduler toggle.
+- Sync logs with success/failure tracking and timestamps.

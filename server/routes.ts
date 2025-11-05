@@ -1605,6 +1605,85 @@ Reponds en JSON avec ce format:
     }
   });
 
+  // Admin: Get sync logs
+  app.get("/api/admin/sync-logs", isAuthenticated, async (req, res) => {
+    try {
+      const logs = await storage.getRecentSyncLogs(50);
+      res.json(logs);
+    } catch (error: any) {
+      console.error("Error fetching sync logs:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Admin: Force manual sync
+  app.post("/api/admin/force-sync", isAuthenticated, async (req, res) => {
+    try {
+      console.log("🔧 [Admin] Manual sync triggered");
+      const results = await dropshippingService.bulkSyncAllProducts();
+      
+      await storage.createProductSyncLog({
+        supplierId: "manual",
+        action: "manual_sync",
+        status: "success",
+        itemsProcessed: results.synced,
+        itemsFailed: results.failed,
+        errorMessage: results.failed > 0 ? `${results.failed} products failed` : null,
+      });
+
+      res.json({
+        message: "Synchronisation manuelle terminée",
+        synced: results.synced,
+        failed: results.failed,
+      });
+    } catch (error: any) {
+      console.error("Error forcing sync:", error);
+      
+      await storage.createProductSyncLog({
+        supplierId: "manual",
+        action: "manual_sync",
+        status: "failed",
+        errorMessage: error.message,
+        itemsProcessed: 0,
+        itemsFailed: 0,
+      });
+
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Admin: Get scheduler status
+  app.get("/api/admin/scheduler-status", isAuthenticated, async (req, res) => {
+    try {
+      const { getSchedulerStatus } = await import("./lib/scheduler");
+      const status = getSchedulerStatus();
+      res.json(status);
+    } catch (error: any) {
+      console.error("Error getting scheduler status:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Admin: Toggle scheduler
+  app.post("/api/admin/scheduler-toggle", isAuthenticated, async (req, res) => {
+    try {
+      const { action } = req.body;
+      const { startScheduledTasks, stopScheduledTasks, getSchedulerStatus } = await import("./lib/scheduler");
+      
+      if (action === "start") {
+        startScheduledTasks();
+      } else if (action === "stop") {
+        stopScheduledTasks();
+      }
+
+      const status = getSchedulerStatus();
+      res.json({ message: `Scheduler ${action === "start" ? "démarré" : "arrêté"}`, status });
+    } catch (error: any) {
+      console.error("Error toggling scheduler:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Initialize seed data on startup
   await seedLocalProducts();
   await seedRelayPoints();

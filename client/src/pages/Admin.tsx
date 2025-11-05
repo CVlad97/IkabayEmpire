@@ -1,10 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { Users, DollarSign, Coins, TrendingUp, ArrowLeft, Sparkles } from "lucide-react";
+import { Users, DollarSign, Coins, TrendingUp, ArrowLeft, Sparkles, Activity, BarChart3 } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import AdminSystemHealth from "@/components/AdminSystemHealth";
 
 interface AdminAnalytics {
   totalSales: number;
@@ -42,7 +44,20 @@ export default function Admin() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <Tabs defaultValue="analytics" className="w-full">
+          <TabsList className="mb-8">
+            <TabsTrigger value="analytics" className="flex items-center gap-2" data-testid="tab-analytics">
+              <BarChart3 className="w-4 h-4" />
+              Analytics
+            </TabsTrigger>
+            <TabsTrigger value="system" className="flex items-center gap-2" data-testid="tab-system">
+              <Activity className="w-4 h-4" />
+              System Health
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="analytics" className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Ventes Totales</CardTitle>
@@ -118,9 +133,9 @@ export default function Admin() {
               </p>
             </CardContent>
           </Card>
-        </div>
+            </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
               <CardTitle>Ventes par Région</CardTitle>
@@ -186,31 +201,37 @@ export default function Admin() {
               )}
             </CardContent>
           </Card>
-        </div>
+            </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-ikabay-orange" />
-              Insights IA
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-4 w-5/6" />
-              </div>
-            ) : (
-              <div className="prose prose-sm max-w-none" data-testid="text-ai-insights">
-                <p className="text-foreground whitespace-pre-wrap">
-                  {analytics?.aiInsights || "L'IA analyse vos données pour générer des insights personnalisés..."}
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-ikabay-orange" />
+                  Insights IA
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-5/6" />
+                  </div>
+                ) : (
+                  <div className="prose prose-sm max-w-none" data-testid="text-ai-insights">
+                    <p className="text-foreground whitespace-pre-wrap">
+                      {analytics?.aiInsights || "L'IA analyse vos données pour générer des insights personnalisés..."}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="system">
+            <AdminSystemHealth />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

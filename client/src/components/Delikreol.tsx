@@ -6,6 +6,9 @@ import { UtensilsCrossed, MapPin } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 export default function Delikreol() {
+  // Public token (still should not be hardcoded). Configure via Vite env.
+  const mapboxToken = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN as string | undefined;
+
   const { data: foodItems, isLoading } = useQuery<FoodItem[]>({
     queryKey: ["/api/food"],
   });
@@ -18,6 +21,11 @@ export default function Delikreol() {
   }>({
     queryKey: ["/api/geolocation"],
   });
+
+  const staticMapUrl =
+    location && mapboxToken
+      ? `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/pin-s+FF914D(${location.longitude},${location.latitude})/${location.longitude},${location.latitude},13,0/800x400@2x?access_token=${encodeURIComponent(mapboxToken)}`
+      : null;
 
   return (
     <section id="delikreol" className="py-16 md:py-20 px-4 bg-card">
@@ -33,9 +41,9 @@ export default function Delikreol() {
 
         <Card className="mb-12 overflow-hidden" data-testid="map-delivery">
           <div className="relative h-[400px] bg-gradient-to-br from-ikabay-green/20 to-ikabay-orange/20">
-            {location && (
+            {staticMapUrl && (
               <div className="absolute inset-0" style={{
-                backgroundImage: `url('https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/pin-s+FF914D(${location.longitude},${location.latitude})/${location.longitude},${location.latitude},13,0/800x400@2x?access_token=MAPBOX_PUBLIC_TOKEN_REPLACE_ME')`,
+                backgroundImage: `url('${staticMapUrl}')`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
               }} />
